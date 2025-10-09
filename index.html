@@ -12,13 +12,12 @@
       padding: 0;
     }
 
-    /* HEADER */
     header {
       text-align: center;
       background-color: #ffb703;
       color: #0d3b66;
-      padding: 30px 0 25px;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+      padding: 25px 0;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
     }
 
     header img {
@@ -33,7 +32,6 @@
     h1 { margin: 5px 0; font-size: 30px; font-weight: bold; }
     header p { font-size: 18px; font-weight: 500; margin:0; }
 
-    /* SEARCH BAR */
     #searchBar {
       display: block;
       margin: 20px auto;
@@ -44,7 +42,6 @@
       font-size: 16px;
     }
 
-    /* ACTIONS */
     .actions {
       width: 90%;
       margin: 10px auto;
@@ -70,14 +67,13 @@
 
     .actions button:hover { opacity: 0.95; }
 
-    /* TABLE */
     table {
       width: 90%;
       margin: 6px auto 30px;
       border-collapse: collapse;
       text-align: left;
       background: #ffffff;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
     }
 
     th, td {
@@ -89,8 +85,15 @@
     th { background-color: #0d3b66; color: white; }
     tr:hover { background-color: #f1f1f1; }
 
-    /* DROPDOWN DETAILS */
-    .details { display: none; background-color: #f8f8f8; padding: 8px; border: 1px solid #ddd; margin-top:8px; border-radius:6px; }
+    .details {
+      display: none;
+      background-color: #f8f8f8;
+      padding: 8px;
+      border: 1px solid #ddd;
+      margin-top:8px;
+      border-radius:6px;
+    }
+
     .dropdown-btn {
       background-color: #ffb703;
       color: #0d3b66;
@@ -101,30 +104,37 @@
       font-size: 13px;
     }
 
-    /* FORM POPUP */
-    #overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 999; }
+    #overlay {
+      display: none;
+      position: fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+
     #addForm {
       display: none;
-      width: 360px;
+      width: 400px;
       background-color: #fff;
       border: 2px solid #0d3b66;
       border-radius: 10px;
       padding: 18px;
       position: fixed;
-      top: 50%;
-      left: 50%;
+      top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       box-shadow: 0 4px 14px rgba(0,0,0,0.35);
       z-index: 1000;
     }
+
     #addForm h3 { margin-top:0; color:#0d3b66; }
     #addForm input, #addForm select, #addForm textarea {
       width: 100%; padding: 8px; margin: 6px 0; border: 1px solid #ccc; border-radius: 6px;
     }
-    #addForm .row { display:flex; gap:8px; }
-    #addForm .row input { flex:1; }
 
-    /* responsive */
+    #addForm .row { display:flex; gap:8px; }
+    #addForm .row input, #addForm .row select { flex:1; }
+
     @media (max-width:720px) {
       #searchBar { width: 90%; }
       .actions { width: 90%; justify-content: center; }
@@ -143,7 +153,7 @@
   </header>
 
   <!-- SEARCH -->
-  <input type="text" id="searchBar" onkeyup="searchFaculty()" placeholder="Search teacher name, position, department, contact, or email...">
+  <input type="text" id="searchBar" onkeyup="searchFaculty()" placeholder="Search teacher name, position, specialization, or email...">
 
   <!-- ACTION BUTTONS -->
   <div class="actions">
@@ -157,15 +167,14 @@
     <thead>
       <tr>
         <th>#</th>
-        <th>Name</th>
+        <th>Full Name</th>
         <th>Position</th>
-        <th>Department</th>
+        <th>Employee No.</th>
+        <th>Specialization</th>
         <th>Details</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- rows inserted dynamically -->
-    </tbody>
+    <tbody></tbody>
   </table>
 
   <!-- POPUP FORM -->
@@ -173,13 +182,27 @@
   <div id="addForm" role="dialog" aria-modal="true">
     <h3>Add New Teacher</h3>
 
-    <input type="text" id="f_name" placeholder="Full Name *">
+    <div class="row">
+      <input type="text" id="f_fname" placeholder="First Name *">
+      <input type="text" id="f_mname" placeholder="Middle Name">
+    </div>
+    <input type="text" id="f_lname" placeholder="Last Name *">
     <input type="text" id="f_position" placeholder="Position *">
-    <input type="text" id="f_department" placeholder="Department *">
+    <input type="text" id="f_empnum" placeholder="Employee Number *">
+
+    <div class="row">
+      <select id="f_sex">
+        <option value="">Sex</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+      <input type="number" id="f_age" placeholder="Age">
+    </div>
+
+    <input type="text" id="f_address" placeholder="Address">
     <input type="text" id="f_contact" placeholder="Contact Number">
     <input type="email" id="f_email" placeholder="Email Address">
-    <input type="text" id="f_advisory" placeholder="Advisory / Class">
-    <textarea id="f_notes" placeholder="Notes (optional)" rows="3"></textarea>
+    <input type="text" id="f_special" placeholder="Specialization">
 
     <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
       <button onclick="addTeacher()">Add</button>
@@ -188,139 +211,81 @@
   </div>
 
   <script>
-    // ----- Data storage: use localStorage so entries persist -----
-    const STORAGE_KEY = 'pis_faculty_data_v1';
+    const STORAGE_KEY = 'pis_faculty_data_v2';
     let facultyData = loadData();
 
-    // Sample default data if none exists
-    if (!facultyData || facultyData.length === 0) {
-      facultyData = [
-        {
-          name: "Maria Santos",
-          position: "Master Teacher I",
-          department: "English",
-          contact: "0917-123-4567",
-          email: "maria.santos@deped.gov.ph",
-          advisory: "Grade 10 - English",
-          notes: ""
-        },
-        {
-          name: "Juan Dela Cruz",
-          position: "Teacher III",
-          department: "Science",
-          contact: "0918-234-5678",
-          email: "juan.delacruz@deped.gov.ph",
-          advisory: "Grade 9 - Science",
-          notes: ""
-        }
-      ];
-      saveData();
-    }
-
-    // UTILS: load & save
     function loadData() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         return raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        console.error('Error loading data', e);
+      } catch {
         return [];
       }
     }
+
     function saveData() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(facultyData));
     }
 
-    // Render table
     function renderTable(filtered = null) {
       const tbody = document.querySelector('#facultyTable tbody');
       tbody.innerHTML = '';
       const list = filtered ?? facultyData;
       list.forEach((f, i) => {
+        const detailsId = 'details-' + (i+1) + '-' + Date.now();
+        const fullname = `${f.fname} ${f.mname ? f.mname + ' ' : ''}${f.lname}`;
         const row = document.createElement('tr');
-
-        // create unique IDs for details so they remain separate
-        const detailsId = 'details-' + (i + 1) + '-' + Date.now();
-
         row.innerHTML = `
           <td>${i + 1}</td>
-          <td>${escapeHtml(f.name)}</td>
-          <td>${escapeHtml(f.position)}</td>
-          <td>${escapeHtml(f.department)}</td>
+          <td>${fullname}</td>
+          <td>${f.position}</td>
+          <td>${f.empnum}</td>
+          <td>${f.special}</td>
           <td>
-            <button class="dropdown-btn" onclick="toggleDetails('${detailsId}', this)">Show Details</button>
+            <button class="dropdown-btn" onclick="toggleDetails('${detailsId}', this)">Show</button>
             <div id="${detailsId}" class="details">
-              <p><strong>Contact:</strong> ${escapeHtml(f.contact || '')}</p>
-              <p><strong>Email:</strong> ${escapeHtml(f.email || '')}</p>
-              <p><strong>Advisory:</strong> ${escapeHtml(f.advisory || '')}</p>
-              <p><strong>Notes:</strong> ${escapeHtml(f.notes || '')}</p>
+              <p><strong>Sex:</strong> ${f.sex || ''}</p>
+              <p><strong>Age:</strong> ${f.age || ''}</p>
+              <p><strong>Address:</strong> ${f.address || ''}</p>
+              <p><strong>Contact:</strong> ${f.contact || ''}</p>
+              <p><strong>Email:</strong> ${f.email || ''}</p>
               <div style="margin-top:6px;">
-                <button onclick="editTeacher(${i})" style="margin-right:6px;">Edit</button>
+                <button onclick="editTeacher(${i})">Edit</button>
                 <button onclick="deleteTeacher(${i})" style="background:#e74c3c;">Delete</button>
               </div>
             </div>
-          </td>
-        `;
+          </td>`;
         tbody.appendChild(row);
       });
     }
 
-    // Escape HTML to avoid injection if user types <>
-    function escapeHtml(text) {
-      if (!text && text !== 0) return '';
-      return String(text)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#39;');
-    }
-
-    // SEARCH
     function searchFaculty() {
       const q = document.getElementById('searchBar').value.trim().toLowerCase();
-      if (!q) {
-        renderTable();
-        return;
-      }
-      const filtered = facultyData.filter(f => {
-        return (f.name||'').toLowerCase().includes(q) ||
-               (f.position||'').toLowerCase().includes(q) ||
-               (f.department||'').toLowerCase().includes(q) ||
-               (f.contact||'').toLowerCase().includes(q) ||
-               (f.email||'').toLowerCase().includes(q) ||
-               (f.advisory||'').toLowerCase().includes(q) ||
-               (f.notes||'').toLowerCase().includes(q);
-      });
+      if (!q) { renderTable(); return; }
+      const filtered = facultyData.filter(f =>
+        (f.fname+f.mname+f.lname).toLowerCase().includes(q) ||
+        (f.position||'').toLowerCase().includes(q) ||
+        (f.special||'').toLowerCase().includes(q) ||
+        (f.email||'').toLowerCase().includes(q)
+      );
       renderTable(filtered);
     }
 
-    // TOGGLE DETAILS
     function toggleDetails(id, btn) {
       const el = document.getElementById(id);
-      if (!el) return;
       if (el.style.display === 'block') {
         el.style.display = 'none';
-        btn.textContent = 'Show Details';
+        btn.textContent = 'Show';
       } else {
         el.style.display = 'block';
-        btn.textContent = 'Hide Details';
+        btn.textContent = 'Hide';
       }
     }
 
-    // OPEN/CLOSE FORM
     function openForm() {
       document.getElementById('overlay').style.display = 'block';
       document.getElementById('addForm').style.display = 'block';
-      // clear inputs
-      document.getElementById('f_name').value = '';
-      document.getElementById('f_position').value = '';
-      document.getElementById('f_department').value = '';
-      document.getElementById('f_contact').value = '';
-      document.getElementById('f_email').value = '';
-      document.getElementById('f_advisory').value = '';
-      document.getElementById('f_notes').value = '';
-      // save mode
+      document.querySelectorAll('#addForm input, #addForm select').forEach(i => i.value = '');
       document.getElementById('addForm').dataset.mode = 'add';
       document.getElementById('addForm').dataset.index = '';
     }
@@ -330,158 +295,95 @@
       document.getElementById('addForm').style.display = 'none';
     }
 
-    // ADD TEACHER (or Save edited teacher)
     function addTeacher() {
-      const name = document.getElementById('f_name').value.trim();
-      const position = document.getElementById('f_position').value.trim();
-      const department = document.getElementById('f_department').value.trim();
-      const contact = document.getElementById('f_contact').value.trim();
-      const email = document.getElementById('f_email').value.trim();
-      const advisory = document.getElementById('f_advisory').value.trim();
-      const notes = document.getElementById('f_notes').value.trim();
+      const f = {
+        fname: document.getElementById('f_fname').value.trim(),
+        mname: document.getElementById('f_mname').value.trim(),
+        lname: document.getElementById('f_lname').value.trim(),
+        position: document.getElementById('f_position').value.trim(),
+        empnum: document.getElementById('f_empnum').value.trim(),
+        sex: document.getElementById('f_sex').value.trim(),
+        age: document.getElementById('f_age').value.trim(),
+        address: document.getElementById('f_address').value.trim(),
+        contact: document.getElementById('f_contact').value.trim(),
+        email: document.getElementById('f_email').value.trim(),
+        special: document.getElementById('f_special').value.trim()
+      };
 
-      if (!name || !position || !department) {
-        alert('Please fill in at least Name, Position, and Department.');
+      if (!f.fname || !f.lname || !f.position || !f.empnum) {
+        alert('Please complete required fields.');
         return;
       }
 
       const mode = document.getElementById('addForm').dataset.mode;
       const idx = document.getElementById('addForm').dataset.index;
-
-      if (mode === 'edit' && idx !== '') {
-        // update existing
-        facultyData[idx] = { name, position, department, contact, email, advisory, notes };
-      } else {
-        // add new
-        facultyData.push({ name, position, department, contact, email, advisory, notes });
-      }
-
+      if (mode === 'edit' && idx !== '') facultyData[idx] = f;
+      else facultyData.push(f);
       saveData();
       renderTable();
       closeForm();
     }
 
-    // Delete teacher
-    function deleteTeacher(index) {
-      if (!confirm('Delete this teacher?')) return;
-      facultyData.splice(index, 1);
-      saveData();
-      renderTable();
-    }
-
-    // Edit teacher: fill form with data
     function editTeacher(index) {
       const f = facultyData[index];
       openForm();
-      document.getElementById('f_name').value = f.name || '';
-      document.getElementById('f_position').value = f.position || '';
-      document.getElementById('f_department').value = f.department || '';
-      document.getElementById('f_contact').value = f.contact || '';
-      document.getElementById('f_email').value = f.email || '';
-      document.getElementById('f_advisory').value = f.advisory || '';
-      document.getElementById('f_notes').value = f.notes || '';
+      document.getElementById('f_fname').value = f.fname;
+      document.getElementById('f_mname').value = f.mname;
+      document.getElementById('f_lname').value = f.lname;
+      document.getElementById('f_position').value = f.position;
+      document.getElementById('f_empnum').value = f.empnum;
+      document.getElementById('f_sex').value = f.sex;
+      document.getElementById('f_age').value = f.age;
+      document.getElementById('f_address').value = f.address;
+      document.getElementById('f_contact').value = f.contact;
+      document.getElementById('f_email').value = f.email;
+      document.getElementById('f_special').value = f.special;
       document.getElementById('addForm').dataset.mode = 'edit';
       document.getElementById('addForm').dataset.index = index;
     }
 
-    // EXPORT -> Excel (.xls) by sending an HTML table with application/vnd.ms-excel
+    function deleteTeacher(i) {
+      if (!confirm('Delete this teacher?')) return;
+      facultyData.splice(i, 1);
+      saveData();
+      renderTable();
+    }
+
     function exportToExcel() {
-      if (facultyData.length === 0) { alert('No data to export'); return; }
-
-      // Create an HTML table string for export
-      let html = '<table><thead><tr>';
-      const headers = ['#','Name','Position','Department','Contact','Email','Advisory','Notes'];
-      headers.forEach(h => { html += '<th>' + h + '</th>'; });
-      html += '</tr></thead><tbody>';
-
-      facultyData.forEach((f, i) => {
-        html += '<tr>';
-        html += `<td>${i+1}</td>`;
-        html += `<td>${escapeForExport(f.name)}</td>`;
-        html += `<td>${escapeForExport(f.position)}</td>`;
-        html += `<td>${escapeForExport(f.department)}</td>`;
-        html += `<td>${escapeForExport(f.contact)}</td>`;
-        html += `<td>${escapeForExport(f.email)}</td>`;
-        html += `<td>${escapeForExport(f.advisory)}</td>`;
-        html += `<td>${escapeForExport(f.notes)}</td>`;
-        html += '</tr>';
+      if (facultyData.length === 0) return alert('No data to export.');
+      let html = '<table><thead><tr><th>#</th><th>First Name</th><th>Middle Name</th><th>Last Name</th><th>Position</th><th>Employee No.</th><th>Sex</th><th>Age</th><th>Address</th><th>Contact</th><th>Email</th><th>Specialization</th></tr></thead><tbody>';
+      facultyData.forEach((f,i) => {
+        html += `<tr><td>${i+1}</td><td>${f.fname}</td><td>${f.mname}</td><td>${f.lname}</td><td>${f.position}</td><td>${f.empnum}</td><td>${f.sex}</td><td>${f.age}</td><td>${f.address}</td><td>${f.contact}</td><td>${f.email}</td><td>${f.special}</td></tr>`;
       });
-
       html += '</tbody></table>';
-
-      // Excel-friendly Blob
-      const blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel' });
+      const blob = new Blob(['\ufeff', html], {type:'application/vnd.ms-excel'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'Faculty_Data.xls'; // .xls opens in Excel
-      document.body.appendChild(a);
+      a.download = 'Faculty_Data.xls';
       a.click();
-      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
 
-    // EXPORT -> CSV (another Excel-friendly format)
     function exportToCSV() {
-      if (facultyData.length === 0) { alert('No data to export'); return; }
-
-      const rows = [];
-      rows.push(['#','Name','Position','Department','Contact','Email','Advisory','Notes']); // header
-
-      facultyData.forEach((f, i) => {
-        rows.push([
-          i+1,
-          f.name || '',
-          f.position || '',
-          f.department || '',
-          f.contact || '',
-          f.email || '',
-          f.advisory || '',
-          f.notes || ''
-        ]);
+      if (facultyData.length === 0) return alert('No data to export.');
+      const headers = ['#','First Name','Middle Name','Last Name','Position','Employee No.','Sex','Age','Address','Contact','Email','Specialization'];
+      const rows = [headers];
+      facultyData.forEach((f,i) => {
+        rows.push([i+1,f.fname,f.mname,f.lname,f.position,f.empnum,f.sex,f.age,f.address,f.contact,f.email,f.special]);
       });
-
-      // Convert to CSV string
-      const csvContent = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
-      const blob = new Blob(['\ufeff', csvContent], { type: 'text/csv;charset=utf-8;' });
+      const csv = rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+      const blob = new Blob(['\ufeff', csv], {type:'text/csv;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'Faculty_Data.csv';
-      document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
 
-    // helpers for export to ensure HTML special characters don't break Excel table
-    function escapeForExport(text) {
-      if (text === undefined || text === null) return '';
-      return String(text).replace(/&/g, '&amp;')
-                         .replace(/</g, '&lt;')
-                         .replace(/>/g, '&gt;')
-                         .replace(/"/g, '&quot;');
-    }
-
-    // initialize
     renderTable();
-
-    // Optional: allow pressing ESC to close form
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeForm();
-    });
-
-    // Expose some functions to global scope (used by inline onclick)
-    window.openForm = openForm;
-    window.closeForm = closeForm;
-    window.addTeacher = addTeacher;
-    window.searchFaculty = searchFaculty;
-    window.toggleDetails = toggleDetails;
-    window.editTeacher = editTeacher;
-    window.deleteTeacher = deleteTeacher;
-    window.exportToExcel = exportToExcel;
-    window.exportToCSV = exportToCSV;
-
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') closeForm(); });
   </script>
 </body>
 </html>
