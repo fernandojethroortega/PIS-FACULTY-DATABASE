@@ -338,5 +338,150 @@
       const contact = document.getElementById('f_contact').value.trim();
       const email = document.getElementById('f_email').value.trim();
       const advisory = document.getElementById('f_advisory').value.trim();
-      const notes = document.
+      const notes = document.getElementById('f_notes').value.trim();
 
+      if (!name || !position || !department) {
+        alert('Please fill in at least Name, Position, and Department.');
+        return;
+      }
+
+      const mode = document.getElementById('addForm').dataset.mode;
+      const idx = document.getElementById('addForm').dataset.index;
+
+      if (mode === 'edit' && idx !== '') {
+        // update existing
+        facultyData[idx] = { name, position, department, contact, email, advisory, notes };
+      } else {
+        // add new
+        facultyData.push({ name, position, department, contact, email, advisory, notes });
+      }
+
+      saveData();
+      renderTable();
+      closeForm();
+    }
+
+    // Delete teacher
+    function deleteTeacher(index) {
+      if (!confirm('Delete this teacher?')) return;
+      facultyData.splice(index, 1);
+      saveData();
+      renderTable();
+    }
+
+    // Edit teacher: fill form with data
+    function editTeacher(index) {
+      const f = facultyData[index];
+      openForm();
+      document.getElementById('f_name').value = f.name || '';
+      document.getElementById('f_position').value = f.position || '';
+      document.getElementById('f_department').value = f.department || '';
+      document.getElementById('f_contact').value = f.contact || '';
+      document.getElementById('f_email').value = f.email || '';
+      document.getElementById('f_advisory').value = f.advisory || '';
+      document.getElementById('f_notes').value = f.notes || '';
+      document.getElementById('addForm').dataset.mode = 'edit';
+      document.getElementById('addForm').dataset.index = index;
+    }
+
+    // EXPORT -> Excel (.xls) by sending an HTML table with application/vnd.ms-excel
+    function exportToExcel() {
+      if (facultyData.length === 0) { alert('No data to export'); return; }
+
+      // Create an HTML table string for export
+      let html = '<table><thead><tr>';
+      const headers = ['#','Name','Position','Department','Contact','Email','Advisory','Notes'];
+      headers.forEach(h => { html += '<th>' + h + '</th>'; });
+      html += '</tr></thead><tbody>';
+
+      facultyData.forEach((f, i) => {
+        html += '<tr>';
+        html += `<td>${i+1}</td>`;
+        html += `<td>${escapeForExport(f.name)}</td>`;
+        html += `<td>${escapeForExport(f.position)}</td>`;
+        html += `<td>${escapeForExport(f.department)}</td>`;
+        html += `<td>${escapeForExport(f.contact)}</td>`;
+        html += `<td>${escapeForExport(f.email)}</td>`;
+        html += `<td>${escapeForExport(f.advisory)}</td>`;
+        html += `<td>${escapeForExport(f.notes)}</td>`;
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+
+      // Excel-friendly Blob
+      const blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Faculty_Data.xls'; // .xls opens in Excel
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // EXPORT -> CSV (another Excel-friendly format)
+    function exportToCSV() {
+      if (facultyData.length === 0) { alert('No data to export'); return; }
+
+      const rows = [];
+      rows.push(['#','Name','Position','Department','Contact','Email','Advisory','Notes']); // header
+
+      facultyData.forEach((f, i) => {
+        rows.push([
+          i+1,
+          f.name || '',
+          f.position || '',
+          f.department || '',
+          f.contact || '',
+          f.email || '',
+          f.advisory || '',
+          f.notes || ''
+        ]);
+      });
+
+      // Convert to CSV string
+      const csvContent = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+      const blob = new Blob(['\ufeff', csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Faculty_Data.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // helpers for export to ensure HTML special characters don't break Excel table
+    function escapeForExport(text) {
+      if (text === undefined || text === null) return '';
+      return String(text).replace(/&/g, '&amp;')
+                         .replace(/</g, '&lt;')
+                         .replace(/>/g, '&gt;')
+                         .replace(/"/g, '&quot;');
+    }
+
+    // initialize
+    renderTable();
+
+    // Optional: allow pressing ESC to close form
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeForm();
+    });
+
+    // Expose some functions to global scope (used by inline onclick)
+    window.openForm = openForm;
+    window.closeForm = closeForm;
+    window.addTeacher = addTeacher;
+    window.searchFaculty = searchFaculty;
+    window.toggleDetails = toggleDetails;
+    window.editTeacher = editTeacher;
+    window.deleteTeacher = deleteTeacher;
+    window.exportToExcel = exportToExcel;
+    window.exportToCSV = exportToCSV;
+
+  </script>
+</body>
+</html>
