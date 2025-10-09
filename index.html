@@ -237,7 +237,7 @@
       <span class="close" onclick="closeModal()">&times;</span>
       <h3>Add Teacher</h3>
       <input type="text" id="firstName" placeholder="First Name" required>
-      <input type="text" id="middleName" placeholder="Middle Name">
+      <input type="text" id="middleName" placeholder="Middle Name" required>
       <input type="text" id="lastName" placeholder="Last Name" required>
       <input type="text" id="position" placeholder="Position" required>
       <input type="text" id="empNumber" placeholder="Employee Number" required>
@@ -286,6 +286,15 @@
         "firstName", "middleName", "lastName", "position", "empNumber",
         "sex", "age", "address", "contact", "email", "specialization"
       ];
+
+      // Check for empty fields
+      for (let id of fields) {
+        let value = document.getElementById(id).value.trim();
+        if (value === "") {
+          alert("⚠️ Please fill out all fields before saving.");
+          return;
+        }
+      }
 
       const newRow = document.createElement("tr");
       fields.forEach(id => {
