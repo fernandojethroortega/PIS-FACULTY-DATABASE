@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagudpud Integrated School Faculty Database</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #fff8e7;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* HEADER */
+    header {
+      text-align: center;
+      background-color: #ffb703;
+      color: #0d3b66;
+      padding: 30px 0 25px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    header img {
+      width: 180px;
+      height: auto;
+      display: block;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+      object-fit: contain;
+    }
+
+    h1 {
+      margin: 5px 0;
+      font-size: 30px;
+      font-weight: bold;
+    }
+
+    header p {
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    /* SEARCH BAR */
+    #searchBar {
+      display: block;
+      margin: 20px auto;
+      padding: 10px;
+      width: 50%;
+      border: 2px solid #0d3b66;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    /* TABLE */
+    table {
+      width: 90%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      text-align: left;
+      background: #ffffff;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+    }
+
+    th {
+      background-color: #0d3b66;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    /* BUTTONS */
+    button {
+      display: block;
+      margin: 10px auto;
+      background-color: #0d3b66;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #ffb703;
+      color: #0d3b66;
+      transition: 0.3s;
+    }
+
+    /* DROPDOWN DETAILS */
+    .details {
+      display: none;
+      background-color: #f8f8f8;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-top: none;
+    }
+
+    .dropdown-btn {
+      background-color: #ffb703;
+      color: #0d3b66;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .dropdown-btn:hover {
+      background-color: #0d3b66;
+      color: #fff;
+    }
+
+    /* FORM POPUP */
+    #addForm {
+      display: none;
+      width: 350px;
+      background-color: #fff;
+      border: 2px solid #0d3b66;
+      border-radius: 10px;
+      padding: 20px;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    #addForm input {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <img src="PIS OFFICIAL SEAL.png" alt="School Logo">
+    <h1>Pagudpud Integrated School Faculty Database</h1>
+    <p>City of San Fernando, La Union</p>
+  </header>
+
+  <!-- SEARCH -->
+  <input type="text" id="searchBar" onkeyup="searchFaculty()" placeholder="Search teacher name or department...">
+
+  <!-- ADD TEACHER BUTTON -->
+  <button onclick="openForm()">Add Teacher</button>
+
+  <!-- TABLE -->
+  <table id="facultyTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Position</th>
+        <th>Department</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Maria Santos</td>
+        <td>Master Teacher I</td>
+        <td>English</td>
+        <td><button class="dropdown-btn" onclick="toggleDetails(this)">Show Details</button>
+          <div class="details">
+            <p><strong>Contact:</strong> 0917-123-4567</p>
+            <p><strong>Email:</strong> maria.santos@deped.gov.ph</p>
+            <p><strong>Advisory:</strong> Grade 10 - English</p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>Juan Dela Cruz</td>
+        <td>Teacher III</td>
+        <td>Science</td>
+        <td><button class="dropdown-btn" onclick="toggleDetails(this)">Show Details</button>
+          <div class="details">
+            <p><strong>Contact:</strong> 0918-234-5678</p>
+            <p><strong>Email:</strong> juan.delacruz@deped.gov.ph</p>
+            <p><strong>Advisory:</strong> Grade 9 - Science</p>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- EXPORT -->
+  <button onclick="exportToWord()">Export to Word</button>
+
+  <!-- ADD FORM POPUP -->
+  <div id="overlay" onclick="closeForm()"></div>
+  <div id="addForm">
+    <h3>Add New Teacher</h3>
+    <input type="text" id="name" placeholder="Full Name">
+    <input type="text" id="position" placeholder="Position">
+    <input type="text" id="department" placeholder="Department">
+    <input type="text" id="contact" placeholder="Contact Number">
+    <input type="text" id="email" placeholder="Email Address">
+    <input type="text" id="advisory" placeholder="Advisory/Class">
+    <button onclick="addTeacher()">Add</button>
+    <button onclick="closeForm()">Cancel</button>
+  </div>
+
+  <script>
+    // SEARCH FUNCTION
+    function searchFaculty() {
+      let input = document.getElementById('searchBar').value.toLowerCase();
+      let rows = document.querySelectorAll('#facultyTable tbody tr');
+
+      rows.forEach(row => {
+        let rowText = row.textContent.toLowerCase();
+        row.style.display = rowText.includes(input) ? '' : 'none';
+      });
+    }
+
+    // DROPDOWN TOGGLE
+    function toggleDetails(button) {
+      let details = button.nextElementSibling;
+      if (details.style.display === 'block') {
+        details.style.display = 'none';
+        button.textContent = 'Show Details';
+      } else {
+        details.style.display = 'block';
+        button.textContent = 'Hide Details';
+      }
+    }
+
+    // EXPORT TO WORD
+    function exportToWord() {
+      let content = document.getElementById('facultyTable').outerHTML;
+      let header = "<html><head><meta charset='utf-8'></head><body>";
+      let footer = "</body></html>";
+      let html = header + content + footer;
+      let blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+      let url = URL.createObjectURL(blob);
+      let link = document.createElement('a');
+      link.href = url;
+      link.download = 'Faculty_Data.doc';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // OPEN AND CLOSE ADD FORM
+    function openForm() {
+      document.getElementById('addForm').style.display = 'block';
+      document.getElementById('overlay').style.display = 'block';
+    }
+
+    function closeForm() {
+      document.getElementById('addForm').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+    }
+
+    // ADD TEACHER FUNCTION
+    function addTeacher() {
+      let name = document.getElementById('name').value;
+      let position = document.getElementById('position').value;
+      let department = document.getElementById('department').value;
+      let contact = document.getElementById('contact').value;
+      let email = document.getElementById('email').value;
+      let advisory = document.getElementById('advisory').value;
+
+      if (name && position && department) {
+        let table = document.getElementById('facultyTable').getElementsByTagName('tbody')[0];
+        let newRow = table.insertRow();
+
+        newRow.innerHTML = `
+          <td>${name}</td>
+          <td>${position}</td>
+          <td>${department}</td>
+          <td>
+            <button class="dropdown-btn" onclick="toggleDetails(this)">Show Details</button>
+            <div class="details">
+              <p><strong>Contact:</strong> ${contact}</p>
+              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Advisory:</strong> ${advisory}</p>
+            </div>
+          </td>
+        `;
+
+        closeForm();
+        document.getElementById('addForm').reset();
+      } else {
+        alert('Please fill in at least the Name, Position, and Department fields.');
+      }
+    }
+  </script>
+
+</body>
+</html>
