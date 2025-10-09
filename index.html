@@ -5,255 +5,179 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pagudpud Integrated School Faculty Database</title>
   <style>
-    /* ====== GENERAL STYLES ====== */
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #fff8e7;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #004d26 0%, #006633 100%);
+      color: #fff;
       margin: 0;
       padding: 0;
-      color: #0d3b66;
-      background-image: linear-gradient(120deg, #fff8e7 0%, #fff1c1 100%);
     }
 
     header {
-      background-color: #ffb703;
-      color: #0d3b66;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      border-bottom: 4px solid #0d3b66;
+      text-align: center;
+      background-color: #003d1e;
+      color: #ffeb3b;
+      padding: 20px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
     }
 
     header img {
-      width: 100px;
-      height: auto;
-      border-radius: 50%;
+      width: 120px;
+      height: 120px;
       object-fit: contain;
-      border: 3px solid #0d3b66;
+      border-radius: 50%;
     }
 
     header h1 {
-      font-size: 24px;
-      text-align: center;
-      margin: 0;
-      text-shadow: 1px 1px #ffffff;
+      margin: 10px 0 0;
+      font-size: 2em;
     }
 
-    #admin-login {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    #admin-login input {
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    #admin-login button {
-      background-color: #0d3b66;
-      color: white;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    main {
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
       padding: 20px;
-      max-width: 1200px;
-      margin: auto;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(6px);
     }
 
-    .toolbar {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
+    h2 {
+      text-align: center;
+      color: #ffeb3b;
+      border-bottom: 2px dashed #ffeb3b;
+      padding-bottom: 10px;
       margin-bottom: 20px;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+    }
+
+    input, select {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    input:required:invalid {
+      border: 2px solid #ff4d4d;
     }
 
     button {
-      background-color: #0d3b66;
-      color: white;
+      background-color: #ffeb3b;
+      color: #003d1e;
       border: none;
-      padding: 10px 15px;
+      padding: 10px 16px;
       border-radius: 8px;
+      font-weight: bold;
       cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 600;
+      transition: 0.3s;
     }
 
     button:hover {
-      background-color: #144f91;
+      background-color: #fff176;
       transform: scale(1.05);
     }
 
-    .search-bar {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
+    .table-container {
+      overflow-x: auto;
+      margin-top: 20px;
     }
 
-    .search-bar input {
-      width: 90%;
-      max-width: 400px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      text-transform: uppercase;
-      font-size: 14px;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    /* ===== TABLE DESIGN ===== */
     table {
       width: 100%;
       border-collapse: collapse;
-      background-color: white;
+      background-color: rgba(255, 255, 255, 0.95);
+      color: #000;
       border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
     }
 
     th, td {
       border: 1px solid #ccc;
-      padding: 10px;
+      padding: 8px;
       text-align: center;
-      text-transform: uppercase;
     }
 
     th {
-      background-color: #ffb703;
-      color: #0d3b66;
-      font-weight: bold;
+      background-color: #004d26;
+      color: #fff;
     }
 
-    tr:nth-child(even) {
-      background-color: #fef5d4;
+    .icon-buttons {
+      text-align: center;
+      margin: 15px 0;
     }
 
-    /* ===== MODAL STYLES ===== */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.6);
+    .icon-buttons button {
+      margin: 5px;
     }
 
-    .modal-content {
-      background-color: #fff8e7;
-      margin: 5% auto;
-      padding: 20px;
-      border: 3px solid #0d3b66;
-      width: 90%;
-      max-width: 500px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-
-    .modal-content input, .modal-content select {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      text-transform: uppercase;
-      font-size: 14px;
-    }
-
-    .close {
-      color: red;
-      float: right;
-      font-size: 20px;
-      cursor: pointer;
-    }
-
-    .close:hover {
-      color: darkred;
+    .admin-login {
+      text-align: right;
+      margin-bottom: 15px;
     }
 
     @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
+      header h1 {
+        font-size: 1.5em;
       }
       header img {
-        width: 80px;
+        width: 90px;
+        height: 90px;
       }
-      header h1 {
-        font-size: 18px;
-      }
-      th, td {
-        font-size: 12px;
-      }
-    }
-
-    /* ICONS */
-    .icon {
-      font-size: 18px;
-    }
-
-    /* Classroom Feel */
-    .modal-content {
-      background-image: linear-gradient(180deg, #fff9e6 0%, #fff4cc 100%);
-      border: 2px dashed #0d3b66;
-    }
-
-    .chalkboard {
-      background-color: #0d3b66;
-      color: white;
-      padding: 12px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-      box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.2);
-      text-align: center;
-      font-weight: bold;
-      font-size: 18px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <div style="display:flex; align-items:center; gap:10px;">
-      <img src="PIS OFFICIAL SEAL.png" alt="School Logo">
-      <h1>Pagudpud Integrated School Faculty Database</h1>
-    </div>
-    <div id="admin-login">
-      <input type="password" id="adminPassword" placeholder="Admin Password">
-      <button onclick="login()">Login</button>
-    </div>
-  </header>
 
-  <main>
-    <div class="chalkboard">FACULTY MANAGEMENT SYSTEM</div>
+<header>
+  <img src="PIS OFFICIAL SEAL.png" alt="School Logo">
+  <h1>Pagudpud Integrated School Faculty Database</h1>
+</header>
 
-    <div class="toolbar">
-      <button onclick="openAddTeacherModal()">➕ Add Teacher</button>
-      <button onclick="openScheduleModal()">🗓️ Teacher's Schedule</button>
-      <button onclick="openVacantModal()">⏰ Vacant Teachers</button>
-      <button onclick="exportToExcel()">📤 Export to Excel</button>
-    </div>
+<div class="container">
 
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Search teacher...">
-    </div>
+  <div class="admin-login">
+    <label for="adminPass">🔐 Admin Password:</label>
+    <input type="password" id="adminPass" placeholder="Enter Password">
+    <button onclick="checkAdmin()">Login</button>
+  </div>
 
+  <h2>Faculty Information</h2>
+
+  <form id="teacherForm">
+    <input type="text" id="firstName" placeholder="First Name" required>
+    <input type="text" id="middleName" placeholder="Middle Name" required>
+    <input type="text" id="lastName" placeholder="Last Name" required>
+    <input type="text" id="position" placeholder="Position" required>
+    <input type="text" id="employeeNumber" placeholder="Employee Number" required>
+    <select id="sex" required>
+      <option value="">Select Sex</option>
+      <option value="MALE">MALE</option>
+      <option value="FEMALE">FEMALE</option>
+    </select>
+    <input type="number" id="age" placeholder="Age" required>
+    <input type="text" id="address" placeholder="Address" required>
+    <input type="text" id="contactNumber" placeholder="Contact Number" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="text" id="specialization" placeholder="Specialization" required>
+  </form>
+
+  <div class="icon-buttons">
+    <button onclick="addTeacher()">➕ Add Teacher</button>
+    <button onclick="exportToExcel()">📤 Export to Excel</button>
+    <button onclick="showSchedule()">🗓️ Teacher's Schedule</button>
+    <button onclick="showVacant()">⏰ Vacant Teachers</button>
+  </div>
+
+  <div class="table-container">
     <table id="facultyTable">
       <thead>
         <tr>
@@ -261,162 +185,89 @@
           <th>Middle Name</th>
           <th>Last Name</th>
           <th>Position</th>
-          <th>Employee Number</th>
+          <th>Employee No.</th>
           <th>Sex</th>
           <th>Age</th>
           <th>Address</th>
-          <th>Contact Number</th>
+          <th>Contact</th>
           <th>Email</th>
           <th>Specialization</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
-  </main>
-
-  <!-- ADD TEACHER MODAL -->
-  <div id="addTeacherModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeAddTeacherModal()">&times;</span>
-      <h3>Add Teacher</h3>
-      <input type="text" id="firstName" placeholder="First Name" required>
-      <input type="text" id="middleName" placeholder="Middle Name" required>
-      <input type="text" id="lastName" placeholder="Last Name" required>
-      <input type="text" id="position" placeholder="Position" required>
-      <input type="text" id="empNumber" placeholder="Employee Number" required>
-      <input type="text" id="sex" placeholder="Sex" required>
-      <input type="number" id="age" placeholder="Age" required>
-      <input type="text" id="address" placeholder="Address" required>
-      <input type="text" id="contact" placeholder="Contact Number" required>
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="text" id="specialization" placeholder="Specialization" required>
-      <button onclick="addTeacher()">Save</button>
-    </div>
   </div>
+</div>
 
-  <!-- VACANT TEACHER MODAL -->
-  <div id="vacantModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeVacantModal()">&times;</span>
-      <h3>Check Vacant Teachers</h3>
-      <input type="time" id="checkTime">
-      <button onclick="checkVacant()">Check</button>
-      <ul id="vacantList"></ul>
-    </div>
-  </div>
+<script>
+  let isAdmin = false;
 
-  <script>
-    let adminAccess = false;
-    let teacherSchedules = {}; // store teacher schedules
+  function checkAdmin() {
+    const pass = document.getElementById("adminPass").value;
+    if (pass === "ADMIN123") {
+      alert("Admin login successful!");
+      isAdmin = true;
+    } else {
+      alert("Incorrect password!");
+    }
+  }
 
-    function login() {
-      const password = document.getElementById('adminPassword').value;
-      if (password === "ADMIN123") {
-        adminAccess = true;
-        alert("✅ Admin access granted!");
-      } else {
-        alert("❌ Incorrect password!");
-      }
+  function addTeacher() {
+    if (!isAdmin) {
+      alert("Admin access required to add teachers.");
+      return;
     }
 
-    function openAddTeacherModal() {
-      if (!adminAccess) {
-        alert("Please login as admin to add teachers.");
+    const form = document.getElementById("teacherForm");
+    const inputs = form.querySelectorAll("input, select");
+    for (let input of inputs) {
+      if (!input.value) {
+        alert("Please complete all fields before submitting.");
         return;
       }
-      document.getElementById("addTeacherModal").style.display = "block";
     }
 
-    function closeAddTeacherModal() {
-      document.getElementById("addTeacherModal").style.display = "none";
-    }
+    const tbody = document.querySelector("#facultyTable tbody");
+    const row = document.createElement("tr");
 
-    function addTeacher() {
-      const fields = ["firstName","middleName","lastName","position","empNumber","sex","age","address","contact","email","specialization"];
-      for (let id of fields) {
-        let val = document.getElementById(id).value.trim();
-        if (val === "") {
-          alert("⚠️ Please fill out all fields!");
-          return;
-        }
-      }
-
-      const row = document.createElement("tr");
-      fields.forEach(id => {
-        const td = document.createElement("td");
-        td.textContent = document.getElementById(id).value.toUpperCase();
-        row.appendChild(td);
-        document.getElementById(id).value = "";
-      });
-
-      document.querySelector("#facultyTable tbody").appendChild(row);
-      closeAddTeacherModal();
-    }
-
-    function openVacantModal() {
-      document.getElementById("vacantModal").style.display = "block";
-    }
-
-    function closeVacantModal() {
-      document.getElementById("vacantModal").style.display = "none";
-    }
-
-    function checkVacant() {
-      const time = document.getElementById("checkTime").value;
-      const list = document.getElementById("vacantList");
-      list.innerHTML = "";
-
-      if (!time) {
-        alert("⏰ Please select a time.");
-        return;
-      }
-
-      const allTeachers = document.querySelectorAll("#facultyTable tbody tr");
-      if (allTeachers.length === 0) {
-        list.innerHTML = "<li>No teachers found.</li>";
-        return;
-      }
-
-      allTeachers.forEach(row => {
-        const name = row.cells[0].textContent + " " + row.cells[2].textContent;
-        // Simulate random occupied/vacant for demo
-        const isVacant = Math.random() > 0.5;
-        if (isVacant) {
-          const li = document.createElement("li");
-          li.textContent = name + " - VACANT";
-          list.appendChild(li);
-        }
-      });
-
-      if (list.children.length === 0) list.innerHTML = "<li>All teachers are busy at this time.</li>";
-    }
-
-    document.getElementById("searchInput").addEventListener("keyup", function() {
-      const filter = this.value.toUpperCase();
-      const rows = document.querySelectorAll("#facultyTable tbody tr");
-      rows.forEach(row => {
-        const text = row.textContent || row.innerText;
-        row.style.display = text.toUpperCase().includes(filter) ? "" : "none";
-      });
+    inputs.forEach(input => {
+      const cell = document.createElement("td");
+      cell.textContent = input.value.toUpperCase();
+      row.appendChild(cell);
+      input.value = "";
     });
 
-    function exportToExcel() {
-      let table = document.getElementById("facultyTable");
-      let rows = table.rows;
-      let csv = [];
-      for (let i = 0; i < rows.length; i++) {
-        let cols = rows[i].querySelectorAll("td, th");
-        let row = [];
-        cols.forEach(col => row.push(col.innerText));
-        csv.push(row.join(","));
-      }
-      let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
-      let link = document.createElement("a");
-      let date = new Date().toISOString().split("T")[0];
-      link.href = URL.createObjectURL(csvFile);
-      link.download = `faculty_database_${date}.csv`;
-      link.click();
+    tbody.appendChild(row);
+  }
+
+  function exportToExcel() {
+    let csv = [];
+    const rows = document.querySelectorAll("table tr");
+
+    for (let row of rows) {
+      const cols = row.querySelectorAll("td, th");
+      const data = Array.from(cols).map(c => c.textContent);
+      csv.push(data.join(","));
     }
-  </script>
+
+    const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(csvFile);
+    link.download = "Faculty_Data.csv";
+    link.click();
+  }
+
+  function showSchedule() {
+    alert("Feature: Teacher's schedule input and view will be displayed here.");
+  }
+
+  function showVacant() {
+    const time = prompt("Enter time to check (e.g., 4:00 PM):");
+    if (time) {
+      alert("Vacant teachers at " + time + " will be displayed here (based on schedule input).");
+    }
+  }
+</script>
+
 </body>
 </html>
