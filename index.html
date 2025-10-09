@@ -1,422 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pagudpud Integrated School Faculty Database</title>
-<style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #fff8e7;
-    margin: 0;
-    padding: 0;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagudpud Integrated School Faculty Database</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #fff8e7;
+      margin: 0;
+      padding: 0;
+    }
 
-  header {
-    text-align: center;
-    background-color: #ffb703;
-    color: #0d3b66;
-    padding: 25px 0;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-  }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #ffb703;
+      color: #0d3b66;
+      padding: 20px 40px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    }
 
-  header img {
-    width: 160px;
-    height: auto;
-    margin-bottom: 10px;
-    border-radius: 50%;
-    object-fit: contain;
-  }
+    header img {
+      width: 120px;
+      height: auto;
+      object-fit: contain;
+      border-radius: 50%;
+    }
 
-  h1 { margin: 5px 0; font-size: 28px; font-weight: bold; }
+    header h1 {
+      font-size: 28px;
+      margin: 0;
+    }
 
-  #loginSection, #mainSection {
-    display: none;
-    text-align: center;
-  }
+    #admin-login {
+      text-align: right;
+    }
 
-  #loginSection {
-    margin-top: 60px;
-  }
+    #admin-login input {
+      padding: 6px;
+      margin-left: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
 
-  #loginSection input {
-    display: block;
-    margin: 10px auto;
-    padding: 8px;
-    width: 250px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    text-align: center;
-  }
+    #admin-login button {
+      padding: 6px 10px;
+      background-color: #0d3b66;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
-  #loginSection button {
-    padding: 8px 18px;
-    background-color: #0d3b66;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
+    main {
+      padding: 30px;
+    }
 
-  #loginSection button:hover { background-color: #082b4a; }
+    .search-bar input {
+      width: 300px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+    }
 
-  #searchBar {
-    display: block;
-    margin: 20px auto;
-    padding: 10px;
-    width: 50%;
-    border: 2px solid #0d3b66;
-    border-radius: 8px;
-    font-size: 16px;
-  }
+    .buttons {
+      margin-bottom: 20px;
+    }
 
-  .actions {
-    width: 90%;
-    margin: 10px auto;
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-  }
+    button {
+      padding: 10px 15px;
+      background-color: #0d3b66;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
 
-  .actions button {
-    background-color: #0d3b66;
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-  }
+    button:hover {
+      background-color: #1d5ca0;
+    }
 
-  .actions button.secondary {
-    background-color: #ffb703;
-    color: #0d3b66;
-  }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-  table {
-    width: 90%;
-    margin: 10px auto 30px;
-    border-collapse: collapse;
-    background: white;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-  }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+      text-transform: uppercase;
+    }
 
-  th, td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-  }
+    th {
+      background-color: #ffb703;
+      color: #0d3b66;
+    }
 
-  th { background-color: #0d3b66; color: white; }
+    /* MODAL FORM */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0; top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
 
-  tr:hover { background-color: #f1f1f1; }
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 20px;
+      width: 500px;
+      border-radius: 10px;
+    }
 
-  .details {
-    display: none;
-    background-color: #f8f8f8;
-    padding: 8px;
-    border-radius: 6px;
-    margin-top: 5px;
-  }
+    .modal-content input {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      text-transform: uppercase;
+    }
 
-  .dropdown-btn {
-    background-color: #ffb703;
-    color: #0d3b66;
-    border: none;
-    border-radius: 5px;
-    padding: 6px 10px;
-    cursor: pointer;
-  }
-
-  #overlay {
-    display: none;
-    position: fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 999;
-  }
-
-  #addForm {
-    display: none;
-    width: 400px;
-    background-color: #fff;
-    border: 2px solid #0d3b66;
-    border-radius: 10px;
-    padding: 18px;
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-    z-index: 1000;
-  }
-
-  #addForm input, #addForm select {
-    width: 100%;
-    padding: 7px;
-    margin: 6px 0;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
-
-  #addForm .row {
-    display: flex;
-    gap: 8px;
-  }
-
-  #addForm .row input, #addForm .row select { flex: 1; }
-
-  @media (max-width:720px) {
-    #searchBar { width: 90%; }
-    .actions { width: 90%; justify-content: center; }
-    table { width: 98%; }
-  }
-</style>
+    .close {
+      color: red;
+      float: right;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
+  <header>
+    <div style="display:flex; align-items:center; gap:15px;">
+      <img src="PIS OFFICIAL SEAL.png" alt="School Logo">
+      <h1>Pagudpud Integrated School Faculty Database</h1>
+    </div>
+    <div id="admin-login">
+      <input type="password" id="adminPassword" placeholder="Admin Password">
+      <button onclick="login()">Login</button>
+    </div>
+  </header>
 
-<header>
-  <img src="PIS OFFICIAL SEAL.png" alt="School Logo">
-  <h1>Pagudpud Integrated School Faculty Database</h1>
-</header>
+  <main>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search teacher...">
+    </div>
 
-<!-- LOGIN SECTION -->
-<div id="loginSection">
-  <h2>Administrator Login</h2>
-  <input type="text" id="adminUser" placeholder="Enter Username">
-  <input type="password" id="adminPass" placeholder="Enter Password">
-  <button onclick="login()">Login</button>
-  <p id="loginMsg" style="color:red;"></p>
-</div>
+    <div class="buttons">
+      <button onclick="openModal()">Add Teacher</button>
+      <button onclick="exportToExcel()">Export to Excel</button>
+    </div>
 
-<!-- MAIN SECTION -->
-<div id="mainSection">
-  <input type="text" id="searchBar" placeholder="Search teacher name, position, specialization..." onkeyup="searchFaculty()">
-
-  <div class="actions">
-    <button onclick="openForm()">Add Teacher</button>
-    <button class="secondary" onclick="exportToExcel()">Export to Excel</button>
-    <button class="secondary" onclick="logout()">Logout</button>
-  </div>
-
-  <table id="facultyTable">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Full Name</th>
-        <th>Position</th>
-        <th>Employee No.</th>
-        <th>Specialization</th>
-        <th>Details</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-<!-- ADD FORM -->
-<div id="overlay" onclick="closeForm()"></div>
-<div id="addForm">
-  <h3>Add Teacher</h3>
-  <div class="row">
-    <input type="text" id="f_fname" placeholder="First Name *">
-    <input type="text" id="f_mname" placeholder="Middle Name">
-  </div>
-  <input type="text" id="f_lname" placeholder="Last Name *">
-  <input type="text" id="f_position" placeholder="Position *">
-  <input type="text" id="f_empnum" placeholder="Employee Number *">
-  <div class="row">
-    <select id="f_sex">
-      <option value="">Sex</option>
-      <option>MALE</option>
-      <option>FEMALE</option>
-    </select>
-    <input type="number" id="f_age" placeholder="Age">
-  </div>
-  <input type="text" id="f_address" placeholder="Address">
-  <input type="text" id="f_contact" placeholder="Contact Number">
-  <input type="email" id="f_email" placeholder="Email (lowercase)">
-  <input type="text" id="f_special" placeholder="Specialization">
-  <div style="text-align:right; margin-top:10px;">
-    <button onclick="addTeacher()">Save</button>
-    <button style="background:#ccc;color:#0d3b66;" onclick="closeForm()">Cancel</button>
-  </div>
-</div>
-
-<script>
-  const STORAGE_KEY = 'faculty_db_secure';
-  let facultyData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  let isAdmin = false;
-
-  // --- LOGIN SYSTEM ---
-  const ADMIN = { user: 'admin', pass: '12345' }; // change credentials here
-
-  function login() {
-    const user = document.getElementById('adminUser').value.trim();
-    const pass = document.getElementById('adminPass').value.trim();
-    if (user === ADMIN.user && pass === ADMIN.pass) {
-      isAdmin = true;
-      document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('mainSection').style.display = 'block';
-      renderTable();
-    } else {
-      document.getElementById('loginMsg').innerText = 'Invalid credentials!';
-    }
-  }
-
-  function logout() {
-    if (confirm('Log out admin?')) {
-      isAdmin = false;
-      document.getElementById('mainSection').style.display = 'none';
-      document.getElementById('loginSection').style.display = 'block';
-    }
-  }
-
-  // --- AUTO UPPERCASE ---
-  document.addEventListener('input', e => {
-    const el = e.target;
-    if (el.tagName === 'INPUT' && el.type !== 'email') {
-      el.value = el.value.toUpperCase();
-    }
-  });
-
-  // --- TABLE RENDERING ---
-  function renderTable(list = facultyData) {
-    const tbody = document.querySelector('#facultyTable tbody');
-    tbody.innerHTML = '';
-    list.forEach((f, i) => {
-      const id = 'details-' + i;
-      const row = `
+    <table id="facultyTable">
+      <thead>
         <tr>
-          <td>${i + 1}</td>
-          <td>${f.fname} ${f.mname || ''} ${f.lname}</td>
-          <td>${f.position}</td>
-          <td>${f.empnum}</td>
-          <td>${f.special}</td>
-          <td>
-            <button class="dropdown-btn" onclick="toggleDetails('${id}', this)">Show</button>
-            <div class="details" id="${id}">
-              <p><b>Sex:</b> ${f.sex}</p>
-              <p><b>Age:</b> ${f.age}</p>
-              <p><b>Address:</b> ${f.address}</p>
-              <p><b>Contact:</b> ${f.contact}</p>
-              <p><b>Email:</b> ${f.email}</p>
-              ${isAdmin ? `<button onclick="editTeacher(${i})">Edit</button>
-              <button style='background:#e74c3c;color:white;' onclick="deleteTeacher(${i})">Delete</button>` : ''}
-            </div>
-          </td>
-        </tr>`;
-      tbody.innerHTML += row;
-    });
-  }
+          <th>First Name</th>
+          <th>Middle Name</th>
+          <th>Last Name</th>
+          <th>Position</th>
+          <th>Employee Number</th>
+          <th>Sex</th>
+          <th>Age</th>
+          <th>Address</th>
+          <th>Contact Number</th>
+          <th>Email</th>
+          <th>Specialization</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
 
-  function toggleDetails(id, btn) {
-    const el = document.getElementById(id);
-    if (el.style.display === 'block') {
-      el.style.display = 'none';
-      btn.innerText = 'Show';
-    } else {
-      el.style.display = 'block';
-      btn.innerText = 'Hide';
+  <!-- ADD TEACHER MODAL -->
+  <div id="teacherModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3>Add Teacher</h3>
+      <input type="text" id="firstName" placeholder="First Name" required>
+      <input type="text" id="middleName" placeholder="Middle Name">
+      <input type="text" id="lastName" placeholder="Last Name" required>
+      <input type="text" id="position" placeholder="Position" required>
+      <input type="text" id="empNumber" placeholder="Employee Number" required>
+      <input type="text" id="sex" placeholder="Sex" required>
+      <input type="number" id="age" placeholder="Age" required>
+      <input type="text" id="address" placeholder="Address" required>
+      <input type="text" id="contact" placeholder="Contact Number" required>
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="text" id="specialization" placeholder="Specialization" required>
+      <button onclick="addTeacher()">Save</button>
+    </div>
+  </div>
+
+  <script>
+    let adminAccess = false;
+
+    function login() {
+      const password = document.getElementById('adminPassword').value;
+      if (password === "ADMIN123") {
+        adminAccess = true;
+        alert("Admin access granted. You can now add or edit teachers.");
+      } else {
+        alert("Incorrect password!");
+      }
     }
-  }
 
-  // --- ADD TEACHER ---
-  function openForm() {
-    if (!isAdmin) return alert('Admin access required.');
-    document.getElementById('overlay').style.display = 'block';
-    document.getElementById('addForm').style.display = 'block';
-    document.querySelectorAll('#addForm input, #addForm select').forEach(el => el.value = '');
-    document.getElementById('addForm').dataset.mode = 'add';
-  }
+    function openModal() {
+      if (!adminAccess) {
+        alert("Please enter admin password before adding a teacher.");
+        return;
+      }
+      document.getElementById('teacherModal').style.display = "block";
+    }
 
-  function closeForm() {
-    document.getElementById('overlay').style.display = 'none';
-    document.getElementById('addForm').style.display = 'none';
-  }
+    function closeModal() {
+      document.getElementById('teacherModal').style.display = "none";
+    }
 
-  function addTeacher() {
-    const f = {
-      fname: f_fname.value.trim(),
-      mname: f_mname.value.trim(),
-      lname: f_lname.value.trim(),
-      position: f_position.value.trim(),
-      empnum: f_empnum.value.trim(),
-      sex: f_sex.value.trim(),
-      age: f_age.value.trim(),
-      address: f_address.value.trim(),
-      contact: f_contact.value.trim(),
-      email: f_email.value.trim(),
-      special: f_special.value.trim()
-    };
+    function addTeacher() {
+      if (!adminAccess) {
+        alert("Please log in as admin before adding data.");
+        return;
+      }
 
-    if (!f.fname || !f.lname || !f.position || !f.empnum) return alert('Complete required fields.');
+      const fields = [
+        "firstName", "middleName", "lastName", "position", "empNumber",
+        "sex", "age", "address", "contact", "email", "specialization"
+      ];
 
-    if (document.getElementById('addForm').dataset.mode === 'edit') {
-      const idx = document.getElementById('addForm').dataset.index;
-      facultyData[idx] = f;
-    } else facultyData.push(f);
+      const newRow = document.createElement("tr");
+      fields.forEach(id => {
+        const td = document.createElement("td");
+        let value = document.getElementById(id).value.trim().toUpperCase();
+        td.textContent = value;
+        newRow.appendChild(td);
+        document.getElementById(id).value = "";
+      });
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(facultyData));
-    closeForm();
-    renderTable();
-  }
+      document.querySelector("#facultyTable tbody").appendChild(newRow);
+      closeModal();
+    }
 
-  function editTeacher(i) {
-    const f = facultyData[i];
-    openForm();
-    f_fname.value = f.fname;
-    f_mname.value = f.mname;
-    f_lname.value = f.lname;
-    f_position.value = f.position;
-    f_empnum.value = f.empnum;
-    f_sex.value = f.sex;
-    f_age.value = f.age;
-    f_address.value = f.address;
-    f_contact.value = f.contact;
-    f_email.value = f.email;
-    f_special.value = f.special;
-    document.getElementById('addForm').dataset.mode = 'edit';
-    document.getElementById('addForm').dataset.index = i;
-  }
-
-  function deleteTeacher(i) {
-    if (!confirm('Delete this record?')) return;
-    facultyData.splice(i, 1);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(facultyData));
-    renderTable();
-  }
-
-  // --- SEARCH ---
-  function searchFaculty() {
-    const q = document.getElementById('searchBar').value.toUpperCase();
-    const result = facultyData.filter(f =>
-      (f.fname + f.mname + f.lname).includes(q) ||
-      f.position.includes(q) ||
-      f.special.includes(q)
-    );
-    renderTable(result);
-  }
-
-  // --- EXPORT EXCEL ---
-  function exportToExcel() {
-    if (facultyData.length === 0) return alert('No data to export.');
-    let html = '<table><tr><th>#</th><th>FIRST NAME</th><th>MIDDLE NAME</th><th>LAST NAME</th><th>POSITION</th><th>EMPLOYEE NO.</th><th>SEX</th><th>AGE</th><th>ADDRESS</th><th>CONTACT</th><th>EMAIL</th><th>SPECIALIZATION</th></tr>';
-    facultyData.forEach((f,i)=> {
-      html += `<tr><td>${i+1}</td><td>${f.fname}</td><td>${f.mname}</td><td>${f.lname}</td><td>${f.position}</td><td>${f.empnum}</td><td>${f.sex}</td><td>${f.age}</td><td>${f.address}</td><td>${f.contact}</td><td>${f.email}</td><td>${f.special}</td></tr>`;
+    // SEARCH FUNCTION
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+      let filter = this.value.toUpperCase();
+      let rows = document.querySelectorAll("#facultyTable tbody tr");
+      rows.forEach(row => {
+        let text = row.textContent || row.innerText;
+        row.style.display = text.toUpperCase().includes(filter) ? "" : "none";
+      });
     });
-    html += '</table>';
-    const blob = new Blob(['\ufeff'+html], { type: 'application/vnd.ms-excel' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Faculty_Data.xls';
-    a.click();
-    URL.revokeObjectURL(url);
-  }
 
-  // show login page by default
-  document.getElementById('loginSection').style.display = 'block';
-</script>
+    // EXPORT TO EXCEL
+    function exportToExcel() {
+      let table = document.getElementById("facultyTable");
+      let rows = table.rows;
+      let csv = [];
+      for (let i = 0; i < rows.length; i++) {
+        let cols = rows[i].querySelectorAll("td, th");
+        let row = [];
+        cols.forEach(col => row.push(col.innerText));
+        csv.push(row.join(","));
+      }
+      let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+      let link = document.createElement("a");
+      link.href = URL.createObjectURL(csvFile);
+      link.download = "faculty_database.csv";
+      link.click();
+    }
+  </script>
 </body>
 </html>
