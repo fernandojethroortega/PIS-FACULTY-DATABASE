@@ -5,12 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Pagudpud Integrated School - Faculty & Schedule</title>
 <style>
-  :root {
-    --blue:#0d3b66;
-    --gold:#ffb703;
-    --bg:#fff8e7;
-  }
-  body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:var(--bg);margin:0;padding:0;color:#111}
+  :root { --blue:#0d3b66; --gold:#ffb703; --bg:#fff8e7; }
+  body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:var(--bg);margin:0;color:#111}
   header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;background:var(--gold);color:var(--blue);padding:12px 16px;box-shadow:0 3px 8px rgba(0,0,0,.12)}
   .brand{display:flex;align-items:center;gap:12px}
   .brand img{width:72px;height:72px;border-radius:50%;object-fit:contain}
@@ -23,15 +19,12 @@
   #adminLogin button{background:var(--blue);color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer}
 
   main{padding:14px}
-
   .topbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px}
   .search{flex:1;min-width:200px;max-width:520px}
   .search input{width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;text-transform:uppercase}
-
   .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .controls button{background:var(--blue);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
   .controls button.secondary{background:var(--gold);color:var(--blue);border:1px solid var(--blue)}
-
   table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
   th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
   th{background:var(--gold);color:var(--blue);text-transform:uppercase;font-size:12px}
@@ -45,15 +38,11 @@
   .modal .panel h3{margin:0 0 8px 0;color:var(--blue)}
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
   .grid .full{grid-column:1/3}
-  input[type=text], input[type=email], input[type=number], select, textarea, input[type=time], input[type=date] {
-    width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px;
-  }
+  input[type=text], input[type=email], input[type=number], select, textarea, input[type=time], input[type=date] { width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px; }
   label{font-size:13px;color:#222;margin-top:6px;display:block}
   .small{font-size:12px;color:#555}
   .row-actions{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
-
-  /* schedule list UI within modal */
-  .schedule-list{max-height:180px;overflow:auto;border:1px dashed #ddd;padding:8px;border-radius:6px;background:#fafafa}
+  .schedule-list{max-height:220px;overflow:auto;border:1px dashed #ddd;padding:8px;border-radius:6px;background:#fafafa}
   .schedule-item{display:flex;justify-content:space-between;gap:8px;padding:6px;border-bottom:1px solid #eee}
   .schedule-item:last-child{border-bottom:none}
 
@@ -79,15 +68,18 @@
   </div>
 
   <div class="header-actions">
-    <!-- icons -->
-    <button class="icon-btn" title="Vacant Teachers (based on current time)" onclick="openVacantModal()">
-      <span class="emoji">⏳</span><span>Vacant Teachers</span>
+    <button class="icon-btn" title="Vacant Teachers (current time)" onclick="openVacantModal('NOW')">
+      <span class="emoji">⏳</span><span>Vacant Now</span>
     </button>
+
+    <button class="icon-btn" title="Check vacant at chosen day & time" onclick="openVacantChecker()">
+      <span class="emoji">🔎</span><span>Check Vacant at...</span>
+    </button>
+
     <button class="icon-btn" title="Teacher Schedules" onclick="openSchedulesModal()">
       <span class="emoji">📅</span><span>Teacher's Schedule</span>
     </button>
 
-    <!-- admin login -->
     <div id="adminLogin">
       <input id="adminPass" type="password" placeholder="Admin password">
       <button onclick="adminLogin()">Admin</button>
@@ -123,49 +115,20 @@
     <h3 id="teacherModalTitle">Add Teacher</h3>
     <div class="grid">
       <div>
-        <label>First Name *</label>
-        <input id="t_first" type="text" placeholder="FIRST NAME">
+        <label>First Name *</label><input id="t_first" type="text" placeholder="FIRST NAME">
       </div>
       <div>
-        <label>Middle Name *</label>
-        <input id="t_middle" type="text" placeholder="MIDDLE NAME">
+        <label>Middle Name *</label><input id="t_middle" type="text" placeholder="MIDDLE NAME">
       </div>
-      <div>
-        <label>Last Name *</label>
-        <input id="t_last" type="text" placeholder="LAST NAME">
-      </div>
-      <div>
-        <label>Position *</label>
-        <input id="t_position" type="text" placeholder="POSITION">
-      </div>
-      <div>
-        <label>Employee Number *</label>
-        <input id="t_empno" type="text" placeholder="EMPLOYEE NUMBER">
-      </div>
-      <div>
-        <label>Sex *</label>
-        <select id="t_sex"><option value="">Select</option><option>MALE</option><option>FEMALE</option></select>
-      </div>
-      <div>
-        <label>Age *</label>
-        <input id="t_age" type="number" min="18" placeholder="AGE">
-      </div>
-      <div>
-        <label>Contact Number *</label>
-        <input id="t_contact" type="text" placeholder="CONTACT">
-      </div>
-      <div class="full">
-        <label>Address *</label>
-        <input id="t_address" type="text" placeholder="ADDRESS">
-      </div>
-      <div>
-        <label>Email (lowercase) *</label>
-        <input id="t_email" type="email" placeholder="email@example.com">
-      </div>
-      <div>
-        <label>Specialization *</label>
-        <input id="t_special" type="text" placeholder="SPECIALIZATION">
-      </div>
+      <div><label>Last Name *</label><input id="t_last" type="text" placeholder="LAST NAME"></div>
+      <div><label>Position *</label><input id="t_position" type="text" placeholder="POSITION"></div>
+      <div><label>Employee Number *</label><input id="t_empno" type="text" placeholder="EMPLOYEE NUMBER"></div>
+      <div><label>Sex *</label><select id="t_sex"><option value="">Select</option><option>MALE</option><option>FEMALE</option></select></div>
+      <div><label>Age *</label><input id="t_age" type="number" min="18" placeholder="AGE"></div>
+      <div><label>Contact Number *</label><input id="t_contact" type="text" placeholder="CONTACT"></div>
+      <div class="full"><label>Address *</label><input id="t_address" type="text" placeholder="ADDRESS"></div>
+      <div><label>Email (lowercase) *</label><input id="t_email" type="email" placeholder="email@example.com"></div>
+      <div><label>Specialization *</label><input id="t_special" type="text" placeholder="SPECIALIZATION"></div>
 
       <!-- Schedule entry area -->
       <div class="full">
@@ -193,10 +156,39 @@
   </div>
 </div>
 
-<!-- Vacant Teachers Modal -->
+<!-- Vacant Now Modal -->
 <div id="vacantModal" class="modal"><div class="panel"><h3>Vacant Teachers (Now)</h3>
-  <div id="vacantList" class="schedule-list"></div>
+  <div id="vacantListNow" class="schedule-list"></div>
   <div class="row-actions"><button onclick="closeVacantModal()">Close</button></div>
+</div></div>
+
+<!-- Vacant Checker Modal (day + time) -->
+<div id="vacantCheckerModal" class="modal"><div class="panel"><h3>Check Vacant at Day & Time</h3>
+  <div class="grid">
+    <div>
+      <label>Day</label>
+      <select id="checker_day">
+        <option value="">Select Day</option>
+        <option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option><option>FRIDAY</option><option>SATURDAY</option><option>SUNDAY</option>
+      </select>
+    </div>
+    <div>
+      <label>Time</label>
+      <input id="checker_time" type="time">
+    </div>
+    <div class="full small">Tip: Example input — 16:00 = 4:00 PM. Then click "Check".</div>
+  </div>
+
+  <div style="margin-top:10px">
+    <button onclick="runVacantChecker()">Check</button>
+    <button style="background:#ddd;color:var(--blue)" onclick="closeVacantChecker()">Cancel</button>
+  </div>
+
+  <hr style="margin:12px 0">
+
+  <div id="vacantCheckerResult" class="schedule-list"></div>
+
+  <div class="row-actions" style="margin-top:8px"><button onclick="closeVacantChecker()">Close</button></div>
 </div></div>
 
 <!-- Schedules Modal -->
@@ -206,25 +198,21 @@
 </div></div>
 
 <script>
-/* -------------------------
-  Data model & persistence
-   - faculty: array of teacher objects
-   - each teacher: {id, fname,mname,lname,position,empno,sex,age,address,contact,email,special, schedules: [{day,start,end,subject,room}]}
-----------------------------*/
-const STORAGE_KEY = 'pis_faculty_v3';
+/* Data model & persistence */
+const STORAGE_KEY = 'pis_faculty_v4';
 let faculty = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 let adminAccess = false;
 let editingIndex = -1;
 
-/* Utility: save to localStorage */
+/* Persist helper */
 function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(faculty)); }
 
-/* Auto uppercase except email/time */
+/* Auto uppercase except email/time/number */
 document.addEventListener('input', e=>{
   const el = e.target;
   if(!el) return;
   if(el.tagName==='INPUT' || el.tagName==='TEXTAREA' || el.tagName==='SELECT'){
-    if(el.type === 'email' || el.type === 'time' || el.type==='number' ) return;
+    if(el.type === 'email' || el.type === 'time' || el.type === 'number') return;
     el.value = el.value.toUpperCase();
   }
 });
@@ -236,9 +224,9 @@ function adminLogin(){
   else { alert('Incorrect password'); }
 }
 
-/* Render table */
+/* Render table with optional search filter */
 function renderTableFiltered(){
-  const q = (document.getElementById('searchInput').value||'').trim().toUpperCase();
+  const q = (document.getElementById('searchInput').value || '').trim().toUpperCase();
   const tbody = document.querySelector('#facultyTable tbody');
   tbody.innerHTML = '';
   faculty.forEach((t,i)=>{
@@ -261,62 +249,47 @@ function renderTableFiltered(){
   });
 }
 
-/* small schedule summary */
+/* schedule summary helper */
 function renderScheduleSummary(sched=[]){
   if(!sched || sched.length===0) return '<span class="pill">NO SCHEDULE</span>';
   return sched.slice(0,2).map(s => `<div class="pill">${s.day} ${s.start}-${s.end} ${s.subject} (${s.room})</div>`).join(' ');
 }
 
-/* View teacher: opens teacher modal in read-only */
-function viewTeacher(i){
-  const t = faculty[i];
-  openTeacherPanel(t, i, true);
-}
-
-/* Open add modal */
+/* Trigger add (admin only) */
 function triggerAdd(){
   if(!adminAccess){ alert('Please enter admin password first.'); return; }
   editingIndex = -1; openTeacherModal();
 }
 
-/* Open modal and reset */
-function openTeacherModal(){
-  document.getElementById('teacherModalTitle').innerText = editingIndex===-1 ? 'Add Teacher' : 'Edit Teacher';
-  clearTeacherForm();
-  document.getElementById('teacherModal').style.display='block';
-}
+/* Open modal & clear */
+function openTeacherModal(){ document.getElementById('teacherModalTitle').innerText = editingIndex===-1 ? 'Add Teacher' : 'Edit Teacher'; clearTeacherForm(); document.getElementById('teacherModal').style.display='block'; }
+function closeTeacherModal(){ document.getElementById('teacherModal').style.display='none'; editingIndex=-1; clearTeacherForm(); }
 
-/* Clear form and schedule list */
+/* Clear form */
 function clearTeacherForm(){
-  ['t_first','t_middle','t_last','t_position','t_empno','t_sex','t_age','t_contact','t_address','t_email','t_special'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.value = '';
-  });
-  document.getElementById('scheduleList').innerHTML = '';
-  document.getElementById('s_day').value=''; document.getElementById('s_start').value=''; document.getElementById('s_end').value=''; document.getElementById('s_subject').value=''; document.getElementById('s_room').value='';
+  ['t_first','t_middle','t_last','t_position','t_empno','t_sex','t_age','t_contact','t_address','t_email','t_special'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('scheduleList').innerHTML='';
+  ['s_day','s_start','s_end','s_subject','s_room'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
 }
 
-/* Add schedule item to local UI list (not yet saved) */
+/* Add schedule item UI */
 function addScheduleItem(){
   const day = document.getElementById('s_day').value;
   const start = document.getElementById('s_start').value;
   const end = document.getElementById('s_end').value;
-  const subject = document.getElementById('s_subject').value.trim().toUpperCase();
-  const room = document.getElementById('s_room').value.trim().toUpperCase();
+  const subject = (document.getElementById('s_subject').value||'').trim().toUpperCase();
+  const room = (document.getElementById('s_room').value||'').trim().toUpperCase();
   if(!day || !start || !end || !subject || !room){ alert('Please complete schedule entry.'); return; }
-  // create UI element
+  if(start >= end){ alert('Start time must be before end time.'); return; }
   const li = document.createElement('div'); li.className='schedule-item';
-  li.dataset.day = day; li.dataset.start = start; li.dataset.end=end; li.dataset.subject=subject; li.dataset.room=room;
-  li.innerHTML = `<div>${day} ${start}-${end} • ${subject} • ${room}</div><div><button onclick="editScheduleItem(this)">✏️</button> <button onclick="removeScheduleItem(this)">🗑️</button></div>`;
+  li.dataset.day = day; li.dataset.start = start; li.dataset.end = end; li.dataset.subject = subject; li.dataset.room = room;
+  li.innerHTML = `<div>${day} ${start}-${end} • ${subject} • ${room}</div>
+    <div><button onclick="editScheduleItem(this)">✏️</button> <button onclick="removeScheduleItem(this)">🗑️</button></div>`;
   document.getElementById('scheduleList').appendChild(li);
-  // clear inputs
-  document.getElementById('s_day').value=''; document.getElementById('s_start').value=''; document.getElementById('s_end').value=''; document.getElementById('s_subject').value=''; document.getElementById('s_room').value='';
+  ['s_day','s_start','s_end','s_subject','s_room'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
 }
-
-/* edit schedule UI item */
 function editScheduleItem(btn){
-  const el = btn.closest('.schedule-item');
-  if(!el) return;
+  const el = btn.closest('.schedule-item'); if(!el) return;
   document.getElementById('s_day').value = el.dataset.day;
   document.getElementById('s_start').value = el.dataset.start;
   document.getElementById('s_end').value = el.dataset.end;
@@ -324,15 +297,11 @@ function editScheduleItem(btn){
   document.getElementById('s_room').value = el.dataset.room;
   el.remove();
 }
+function removeScheduleItem(btn){ const el = btn.closest('.schedule-item'); if(el) el.remove(); }
 
-/* remove schedule UI item */
-function removeScheduleItem(btn){
-  const el = btn.closest('.schedule-item'); if(el) el.remove();
-}
-
-/* Save teacher from modal */
+/* Save teacher (add/edit) */
 function saveTeacher(){
-  // gather fields
+  // collect fields
   const t = {
     fname: (document.getElementById('t_first').value||'').trim().toUpperCase(),
     mname: (document.getElementById('t_middle').value||'').trim().toUpperCase(),
@@ -343,89 +312,75 @@ function saveTeacher(){
     age: (document.getElementById('t_age').value||'').trim(),
     contact: (document.getElementById('t_contact').value||'').trim().toUpperCase(),
     address: (document.getElementById('t_address').value||'').trim().toUpperCase(),
-    email: (document.getElementById('t_email').value||'').trim(), // keep email as typed (case-insensitive)
+    email: (document.getElementById('t_email').value||'').trim(), // keep email case as entered
     special: (document.getElementById('t_special').value||'').trim().toUpperCase()
   };
   // require all fields
   for(const k of ['fname','mname','lname','position','empno','sex','age','contact','address','email','special']){
     if(!t[k]){ alert('All fields (including Middle Name) are required.'); return; }
   }
-  // collect schedules from UI list
+  // collect schedules
   const schedEls = Array.from(document.querySelectorAll('#scheduleList .schedule-item'));
   if(schedEls.length === 0){ alert('At least one schedule entry is required.'); return; }
   t.schedules = schedEls.map(el => ({ day: el.dataset.day, start: el.dataset.start, end: el.dataset.end, subject: el.dataset.subject, room: el.dataset.room }));
-  // save or update
-  if(editingIndex>=0){
-    faculty[editingIndex] = t;
-  } else {
-    faculty.push(t);
-  }
+  // update or push
+  if(editingIndex >= 0){ faculty[editingIndex] = t; } else { faculty.push(t); }
   persist(); renderTableFiltered(); closeTeacherModal();
 }
 
-/* close modal */
-function closeTeacherModal(){ document.getElementById('teacherModal').style.display='none'; editingIndex=-1; clearTeacherForm(); }
-
-/* open edit */
+/* Open edit (admin only) */
 function openEdit(i){
   if(!adminAccess){ alert('Admin required to edit'); return; }
   editingIndex = i; openTeacherModal();
-  // populate fields
   const t = faculty[i];
   document.getElementById('t_first').value = t.fname; document.getElementById('t_middle').value = t.mname; document.getElementById('t_last').value = t.lname;
   document.getElementById('t_position').value = t.position; document.getElementById('t_empno').value = t.empno; document.getElementById('t_sex').value = t.sex;
   document.getElementById('t_age').value = t.age; document.getElementById('t_contact').value = t.contact; document.getElementById('t_address').value = t.address;
   document.getElementById('t_email').value = t.email; document.getElementById('t_special').value = t.special;
-  // populate schedule list
+  // schedules
   const list = document.getElementById('scheduleList'); list.innerHTML = '';
   (t.schedules||[]).forEach(s=>{
     const li = document.createElement('div'); li.className='schedule-item';
-    li.dataset.day = s.day; li.dataset.start=s.start; li.dataset.end=s.end; li.dataset.subject=s.subject; li.dataset.room=s.room;
+    li.dataset.day=s.day; li.dataset.start=s.start; li.dataset.end=s.end; li.dataset.subject=s.subject; li.dataset.room=s.room;
     li.innerHTML = `<div>${s.day} ${s.start}-${s.end} • ${s.subject} • ${s.room}</div><div><button onclick="editScheduleItem(this)">✏️</button> <button onclick="removeScheduleItem(this)">🗑️</button></div>`;
     list.appendChild(li);
   });
 }
 
-/* delete teacher */
+/* Delete teacher (admin only) */
 function deleteTeacher(i){
   if(!adminAccess){ alert('Admin required to delete'); return; }
   if(!confirm('Delete this teacher?')) return;
   faculty.splice(i,1); persist(); renderTableFiltered();
 }
 
-/* view teacher (read-only modal) */
-function openTeacherPanel(tObj, idx, readonly=false){
-  // reuse modal: populate and disable inputs
-  editingIndex = idx;
+/* View teacher (read-only) */
+function viewTeacher(i){
+  const t = faculty[i];
+  editingIndex = i;
   openTeacherModal();
-  document.getElementById('t_first').value = tObj.fname; document.getElementById('t_middle').value = tObj.mname; document.getElementById('t_last').value = tObj.lname;
-  document.getElementById('t_position').value = tObj.position; document.getElementById('t_empno').value = tObj.empno; document.getElementById('t_sex').value = tObj.sex;
-  document.getElementById('t_age').value = tObj.age; document.getElementById('t_contact').value = tObj.contact; document.getElementById('t_address').value = tObj.address;
-  document.getElementById('t_email').value = tObj.email; document.getElementById('t_special').value = tObj.special;
-  // schedule
+  document.getElementById('t_first').value = t.fname; document.getElementById('t_middle').value = t.mname; document.getElementById('t_last').value = t.lname;
+  document.getElementById('t_position').value = t.position; document.getElementById('t_empno').value = t.empno; document.getElementById('t_sex').value = t.sex;
+  document.getElementById('t_age').value = t.age; document.getElementById('t_contact').value = t.contact; document.getElementById('t_address').value = t.address;
+  document.getElementById('t_email').value = t.email; document.getElementById('t_special').value = t.special;
   const list = document.getElementById('scheduleList'); list.innerHTML='';
-  (tObj.schedules||[]).forEach(s=>{
+  (t.schedules||[]).forEach(s=>{
     const li = document.createElement('div'); li.className='schedule-item';
     li.innerHTML = `<div>${s.day} ${s.start}-${s.end} • ${s.subject} • ${s.room}</div>`;
     list.appendChild(li);
   });
-  // make inputs readonly if not admin or readonly flag
+  // make readonly for non-admin
   const inputs = document.querySelectorAll('#teacherModal input, #teacherModal select, #teacherModal button');
   inputs.forEach(inp=>{
-    if(inp.tagName==='BUTTON'){ /* keep Close/Save buttons handling */ }
-    if(readonly || !adminAccess){
-      inp.disabled = true;
-    } else {
-      inp.disabled = false;
-    }
+    if(inp.textContent === 'Save' || inp.textContent === '✏️' || inp.textContent === '🗑️') return;
+    if(!adminAccess) inp.disabled = true; else inp.disabled = false;
   });
-  document.getElementById('teacherModalTitle').innerText = readonly ? 'View Teacher' : (adminAccess ? 'Edit Teacher' : 'View Teacher');
+  document.getElementById('teacherModalTitle').innerText = 'View Teacher';
 }
 
-/* Vacant detection: find teachers who DO NOT have a schedule overlapping current datetime */
+/* Vacant Now: uses current day & time */
 function getCurrentDayTime(){
   const now = new Date();
-  // map weekday to our day strings
   const days = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
   const day = days[now.getDay()];
   const hh = String(now.getHours()).padStart(2,'0');
@@ -433,62 +388,68 @@ function getCurrentDayTime(){
   const time = `${hh}:${mm}`;
   return {day,time};
 }
-
-/* check overlap: returns true if given time is inside start-end (inclusive start, exclusive end) */
 function timeInRange(time, start, end){
-  // times are "HH:MM"
   return (time >= start && time < end);
 }
-
-function getVacantTeachers(){
-  const ct = getCurrentDayTime();
+function getVacantAt(day, time){
   const result = [];
   faculty.forEach(t=>{
-    const schedulesToday = (t.schedules||[]).filter(s=> s.day === ct.day );
-    // if none today => vacant
-    if(schedulesToday.length === 0){ result.push({t,reason:'No schedule today'}); return; }
-    // if any schedule overlaps current time then NOT vacant
-    const busy = schedulesToday.some(s => timeInRange(ct.time, s.start, s.end));
-    if(!busy) result.push({t,reason:'Free at this time'});
+    const schedulesToday = (t.schedules||[]).filter(s => s.day === day);
+    if(schedulesToday.length === 0){ result.push({t,reason:'No schedule on ' + day}); return; }
+    const busy = schedulesToday.some(s => timeInRange(time, s.start, s.end));
+    if(!busy) result.push({t,reason:`Free at ${time} on ${day}`});
   });
   return result;
 }
 
-/* Vacant modal control */
-function openVacantModal(){
-  const list = document.getElementById('vacantList'); list.innerHTML='';
-  const vacants = getVacantTeachers();
-  if(vacants.length===0){ list.innerHTML = '<div class="small">No vacant teachers at this time.</div>'; }
+/* Open Vacant Now modal */
+function openVacantModal(mode){
+  const list = document.getElementById('vacantListNow'); list.innerHTML='';
+  const ct = getCurrentDayTime();
+  const vacants = getVacantAt(ct.day, ct.time);
+  if(vacants.length===0) list.innerHTML = '<div class="small">No vacant teachers at this time.</div>';
   vacants.forEach(v=>{
     const div = document.createElement('div'); div.className='schedule-item';
-    div.innerHTML = `<div><strong>${v.t.fname} ${v.t.lname}</strong><br><small>${v.t.position} • ${v.t.empno}</small><div class="small">Reason: ${v.reason}</div></div><div><button onclick="openTeacherFromVacant('${v.t.empno}')">View</button></div>`;
+    div.innerHTML = `<div><strong>${v.t.fname} ${v.t.lname}</strong><br><small>${v.t.position} • ${v.t.empno}</small><div class="small">${v.reason}</div></div><div><button onclick="openTeacherFromEmp('${v.t.empno}')">View</button></div>`;
     list.appendChild(div);
   });
   document.getElementById('vacantModal').style.display='block';
 }
 function closeVacantModal(){ document.getElementById('vacantModal').style.display='none'; }
-function openTeacherFromVacant(empno){
-  closeVacantModal();
-  const idx = faculty.findIndex(x=> x.empno === empno);
-  if(idx>=0) viewTeacher(idx);
+function openTeacherFromEmp(empno){ closeVacantModal(); const idx = faculty.findIndex(x=> x.empno === empno); if(idx>=0) viewTeacher(idx); }
+
+/* Vacant Checker (user chooses day & time) */
+function openVacantChecker(){ document.getElementById('checker_day').value=''; document.getElementById('checker_time').value=''; document.getElementById('vacantCheckerResult').innerHTML=''; document.getElementById('vacantCheckerModal').style.display='block'; }
+function closeVacantChecker(){ document.getElementById('vacantCheckerModal').style.display='none'; }
+function runVacantChecker(){
+  const day = (document.getElementById('checker_day').value||'').trim().toUpperCase();
+  const time = (document.getElementById('checker_time').value||'').trim();
+  if(!day || !time){ alert('Please select day and time.'); return; }
+  const listEl = document.getElementById('vacantCheckerResult'); listEl.innerHTML='';
+  const vacants = getVacantAt(day, time);
+  if(vacants.length===0){ listEl.innerHTML = '<div class="small">No vacant teachers at that day/time.</div>'; return; }
+  vacants.forEach(v=>{
+    const d = document.createElement('div'); d.className='schedule-item';
+    d.innerHTML = `<div><strong>${v.t.fname} ${v.t.lname}</strong><br><small>${v.t.position} • ${v.t.empno}</small><div class="small">${v.reason}</div></div><div><button onclick="openTeacherFromEmp('${v.t.empno}')">View</button></div>`;
+    listEl.appendChild(d);
+  });
 }
 
-/* Schedules modal: list all teachers and their schedules */
+/* Schedules modal */
 function openSchedulesModal(){
   const el = document.getElementById('allSchedules'); el.innerHTML='';
   if(faculty.length===0){ el.innerHTML = '<div class="small">No teachers yet.</div>'; document.getElementById('schedulesModal').style.display='block'; return; }
   faculty.forEach(t=>{
     const d = document.createElement('div'); d.className='schedule-item';
     const schedText = (t.schedules||[]).map(s=> `${s.day} ${s.start}-${s.end} • ${s.subject} • ${s.room}`).join('<br>');
-    d.innerHTML = `<div><strong>${t.fname} ${t.lname}</strong><br><small>${t.position} • ${t.empno}</small><div class="small">${schedText || 'No schedule'}</div></div><div><button onclick="openTeacherSchedule('${t.empno}')">View</button></div>`;
+    d.innerHTML = `<div><strong>${t.fname} ${t.lname}</strong><br><small>${t.position} • ${t.empno}</small><div class="small" style="margin-top:6px">${schedText || 'No schedule'}</div></div><div><button onclick="openTeacherFromEmp('${t.empno}')">View</button></div>`;
     el.appendChild(d);
   });
   document.getElementById('schedulesModal').style.display='block';
 }
 function closeSchedulesModal(){ document.getElementById('schedulesModal').style.display='none'; }
-function openTeacherSchedule(empno){ closeSchedulesModal(); const idx = faculty.findIndex(x=> x.empno===empno); if(idx>=0) viewTeacher(idx); }
 
-/* Export CSV (Excel-friendly) including schedules flattened */
+/* Export CSV (includes schedules JSON) */
 function exportCSV(){
   if(faculty.length===0){ alert('No data to export'); return; }
   const rows = [];
@@ -513,22 +474,15 @@ function clearAllData(){
   faculty = []; persist(); renderTableFiltered();
 }
 
-/* When the page loads, render */
+/* Modal close behavior */
 renderTableFiltered();
-
-/* allow modal close on background click */
 document.querySelectorAll('.modal').forEach(m=>{
-  m.addEventListener('click', e=>{
-    if(e.target === m) m.style.display='none';
-  });
+  m.addEventListener('click', e=>{ if(e.target === m) m.style.display='none'; });
 });
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); });
 
-/* keyboard: Esc closes modals */
-document.addEventListener('keydown', e=>{
-  if(e.key === 'Escape'){
-    document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
-  }
-});
+/* Make sure sample empty state shows on first load */
+if(!localStorage.getItem(STORAGE_KEY)) persist();
 </script>
 </body>
 </html>
