@@ -1,97 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pagudpud Integrated School Faculty Database</title>
-<style>
-  :root {
-    --blue: #004AAD;
-    --gold: #F4C542;
-    --light: #f8f9fa;
-  }
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: var(--light);
-    margin: 0;
-    padding: 0;
-  }
-  header {
-    background: var(--blue);
-    color: white;
-    text-align: center;
-    padding: 20px;
-  }
-  header img {
-    width: 120px;
-    height: 120px;
-    object-fit: contain;
-    margin-bottom: 10px;
-  }
-  .container {
-    max-width: 1200px;
-    margin: 30px auto;
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  }
-  input, select {
-    width: 100%;
-    padding: 10px;
-    margin: 6px 0;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-  }
-  button {
-    background: var(--blue);
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    margin: 5px 2px;
-  }
-  button:hover {
-    background: var(--gold);
-    color: black;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-  }
-  th, td {
-    padding: 10px;
-    border: 1px solid #ddd;
-    text-align: center;
-  }
-  th {
-    background: var(--gold);
-  }
-  .feature-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-  .feature-buttons button {
-    flex: 1 1 150px;
-  }
-  @media (max-width: 768px) {
-    .feature-buttons {
-      flex-direction: column;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagudpud Integrated School Faculty Database</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #004d26 0%, #006633 100%);
+      color: #fff;
+      margin: 0;
+      padding: 0;
     }
-  }
-  #scheduleTable, #teacherInfoTable {
-    display: none;
-    margin-top: 20px;
-  }
-  #scheduleTable.active, #teacherInfoTable.active {
-    display: block;
-  }
-</style>
+
+    header {
+      text-align: center;
+      background-color: #003d1e;
+      color: #ffeb3b;
+      padding: 20px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    header img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      border-radius: 50%;
+    }
+
+    header h1 {
+      margin: 10px 0 0;
+      font-size: 2em;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(6px);
+    }
+
+    h2 {
+      text-align: center;
+      color: #ffeb3b;
+      border-bottom: 2px dashed #ffeb3b;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+    }
+
+    input, select {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    input:required:invalid {
+      border: 2px solid #ff4d4d;
+    }
+
+    button {
+      background-color: #ffeb3b;
+      color: #003d1e;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #fff176;
+      transform: scale(1.05);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: rgba(255, 255, 255, 0.95);
+      color: #000;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #004d26;
+      color: #fff;
+    }
+
+    .icon-buttons {
+      text-align: center;
+      margin: 15px 0;
+    }
+
+    .icon-buttons button {
+      margin: 5px;
+    }
+
+    .admin-login {
+      text-align: right;
+      margin-bottom: 15px;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.5em;
+      }
+      header img {
+        width: 90px;
+        height: 90px;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -102,17 +144,15 @@
 
 <div class="container">
 
-  <div class="feature-buttons">
-    <button onclick="toggleForm()">➕ Add Teacher</button>
-    <button onclick="showAllTeachers()">👁 View Complete Info</button>
-    <button onclick="showSchedule()">📅 View Schedule</button>
-    <button onclick="generateContingency()">🧾 Contingency Plan</button>
-    <button onclick="viewVacant()">🕓 View Vacant Teachers</button>
+  <div class="admin-login">
+    <label for="adminPass">🔐 Admin Password:</label>
+    <input type="password" id="adminPass" placeholder="Enter Password">
+    <button onclick="checkAdmin()">Login</button>
   </div>
 
-  <!-- Add Teacher Form -->
-  <form id="teacherForm" style="display:none;">
-    <h3>Add Faculty Member</h3>
+  <h2>Faculty Information</h2>
+
+  <form id="teacherForm">
     <input type="text" id="firstName" placeholder="First Name" required>
     <input type="text" id="middleName" placeholder="Middle Name" required>
     <input type="text" id="lastName" placeholder="Last Name" required>
@@ -120,26 +160,32 @@
     <input type="text" id="employeeNumber" placeholder="Employee Number" required>
     <select id="sex" required>
       <option value="">Select Sex</option>
-      <option>MALE</option>
-      <option>FEMALE</option>
+      <option value="MALE">MALE</option>
+      <option value="FEMALE">FEMALE</option>
     </select>
     <input type="number" id="age" placeholder="Age" required>
     <input type="text" id="address" placeholder="Address" required>
     <input type="text" id="contactNumber" placeholder="Contact Number" required>
     <input type="email" id="email" placeholder="Email" required>
     <input type="text" id="specialization" placeholder="Specialization" required>
-    <button type="submit">Save Teacher</button>
   </form>
 
-  <!-- Teacher Info Table -->
-  <div id="teacherInfoTable">
-    <h3>Complete Teacher Information</h3>
-    <table id="infoTable">
+  <div class="icon-buttons">
+    <button onclick="addTeacher()">➕ Add Teacher</button>
+    <button onclick="exportToExcel()">📤 Export to Excel</button>
+    <button onclick="showSchedule()">🗓️ Teacher's Schedule</button>
+    <button onclick="showVacant()">⏰ Vacant Teachers</button>
+  </div>
+
+  <div class="table-container">
+    <table id="facultyTable">
       <thead>
         <tr>
-          <th>Employee No.</th>
-          <th>Name</th>
+          <th>First Name</th>
+          <th>Middle Name</th>
+          <th>Last Name</th>
           <th>Position</th>
+          <th>Employee No.</th>
           <th>Sex</th>
           <th>Age</th>
           <th>Address</th>
@@ -151,124 +197,77 @@
       <tbody></tbody>
     </table>
   </div>
-
-  <!-- Schedule Table -->
-  <div id="scheduleTable">
-    <h3>Faculty Schedule (Weekly)</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Monday</th>
-          <th>Tuesday</th>
-          <th>Wednesday</th>
-          <th>Thursday</th>
-          <th>Friday</th>
-        </tr>
-      </thead>
-      <tbody id="schedBody"></tbody>
-    </table>
-  </div>
 </div>
 
 <script>
-let teachers = JSON.parse(localStorage.getItem("teachers")) || [];
+  let isAdmin = false;
 
-// Convert all inputs to uppercase automatically
-document.querySelectorAll("input[type='text']").forEach(inp => {
-  inp.addEventListener("input", () => inp.value = inp.value.toUpperCase());
-});
-
-function toggleForm() {
-  const form = document.getElementById("teacherForm");
-  form.style.display = (form.style.display === "none") ? "block" : "none";
-}
-
-// Save teacher data
-document.getElementById("teacherForm").addEventListener("submit", e => {
-  e.preventDefault();
-
-  let newTeacher = {
-    firstName: firstName.value.trim().toUpperCase(),
-    middleName: middleName.value.trim().toUpperCase(),
-    lastName: lastName.value.trim().toUpperCase(),
-    position: position.value.trim().toUpperCase(),
-    employeeNumber: employeeNumber.value.trim().toUpperCase(),
-    sex: sex.value,
-    age: age.value,
-    address: address.value.trim().toUpperCase(),
-    contactNumber: contactNumber.value.trim().toUpperCase(),
-    email: email.value.trim().toUpperCase(),
-    specialization: specialization.value.trim().toUpperCase()
-  };
-
-  // Require all fields
-  for (const [key, value] of Object.entries(newTeacher)) {
-    if (!value) {
-      alert("⚠️ Please complete all fields before saving.");
-      return;
+  function checkAdmin() {
+    const pass = document.getElementById("adminPass").value;
+    if (pass === "ADMIN123") {
+      alert("Admin login successful!");
+      isAdmin = true;
+    } else {
+      alert("Incorrect password!");
     }
   }
 
-  teachers.push(newTeacher);
-  localStorage.setItem("teachers", JSON.stringify(teachers));
-  alert("✅ Teacher successfully added!");
-  document.getElementById("teacherForm").reset();
-  toggleForm();
-  showAllTeachers();
-});
+  function addTeacher() {
+    if (!isAdmin) {
+      alert("Admin access required to add teachers.");
+      return;
+    }
 
-// Show all teachers in table
-function showAllTeachers() {
-  document.getElementById("teacherInfoTable").classList.add("active");
-  document.getElementById("scheduleTable").classList.remove("active");
+    const form = document.getElementById("teacherForm");
+    const inputs = form.querySelectorAll("input, select");
+    for (let input of inputs) {
+      if (!input.value) {
+        alert("Please complete all fields before submitting.");
+        return;
+      }
+    }
 
-  const tbody = document.querySelector("#infoTable tbody");
-  tbody.innerHTML = "";
-  teachers.forEach(t => {
-    let row = `<tr>
-      <td>${t.employeeNumber}</td>
-      <td>${t.lastName}, ${t.firstName} ${t.middleName}</td>
-      <td>${t.position}</td>
-      <td>${t.sex}</td>
-      <td>${t.age}</td>
-      <td>${t.address}</td>
-      <td>${t.contactNumber}</td>
-      <td>${t.email}</td>
-      <td>${t.specialization}</td>
-    </tr>`;
-    tbody.innerHTML += row;
-  });
-}
+    const tbody = document.querySelector("#facultyTable tbody");
+    const row = document.createElement("tr");
 
-// Show schedule
-function showSchedule() {
-  document.getElementById("scheduleTable").classList.add("active");
-  document.getElementById("teacherInfoTable").classList.remove("active");
+    inputs.forEach(input => {
+      const cell = document.createElement("td");
+      cell.textContent = input.value.toUpperCase();
+      row.appendChild(cell);
+      input.value = "";
+    });
 
-  const schedBody = document.getElementById("schedBody");
-  schedBody.innerHTML = "";
-  const times = ["7:00-8:00","8:00-9:00","9:00-10:00","10:00-11:00","11:00-12:00","1:00-2:00","2:00-3:00","3:00-4:00","4:00-5:00"];
-  times.forEach(t => {
-    schedBody.innerHTML += `<tr>
-      <td>${t}</td>
-      <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-    </tr>`;
-  });
-}
+    tbody.appendChild(row);
+  }
 
-// Contingency Plan
-function generateContingency() {
-  alert("🧾 Contingency Plan: Select available teachers to take over absent classes. (Feature in development)");
-}
+  function exportToExcel() {
+    let csv = [];
+    const rows = document.querySelectorAll("table tr");
 
-// Vacant Teachers View
-function viewVacant() {
-  alert("🕓 Viewing vacant teachers based on schedule. (Feature in development)");
-}
+    for (let row of rows) {
+      const cols = row.querySelectorAll("td, th");
+      const data = Array.from(cols).map(c => c.textContent);
+      csv.push(data.join(","));
+    }
 
-// Load initial view
-showAllTeachers();
+    const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(csvFile);
+    link.download = "Faculty_Data.csv";
+    link.click();
+  }
+
+  function showSchedule() {
+    alert("Feature: Teacher's schedule input and view will be displayed here.");
+  }
+
+  function showVacant() {
+    const time = prompt("Enter time to check (e.g., 4:00 PM):");
+    if (time) {
+      alert("Vacant teachers at " + time + " will be displayed here (based on schedule input).");
+    }
+  }
 </script>
+
 </body>
 </html>
