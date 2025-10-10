@@ -138,7 +138,9 @@
     </table>
   </section>
 </main>
-
+<button id="addTeacherBtn">Add Teacher</button>
+<button id="importExcelBtn">📁 Import from Excel</button>
+<input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display:none;">
 <!-- Add/Edit Teacher Modal -->
 <div id="teacherModal" class="modal" aria-hidden="true">
   <div class="panel" role="dialog" aria-modal="true">
@@ -155,10 +157,6 @@
       <div class="full"><label>Address *</label><input id="t_address" type="text" placeholder="ADDRESS"></div>
       <div><label>Email (lowercase) *</label><input id="t_email" type="email" placeholder="email@example.com"></div>
       <div><label>Specialization *</label><input id="t_special" type="text" placeholder="SPECIALIZATION"></div>
-      
-<button id="addTeacherBtn">Add Teacher</button>
-<button id="importExcelBtn">📁 Import from Excel</button>
-<input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display:none;">
 
       <div class="full">
         <label>Schedules (Day, Start - End, Subject, Room) — Add one by one *</label>
@@ -652,4 +650,5 @@ function addTeacherToTable(teacher) {
 
 </body>
 </html>
+
 
