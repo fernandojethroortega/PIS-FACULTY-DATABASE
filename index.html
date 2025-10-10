@@ -604,6 +604,33 @@ function populateContDropdown(){
   // This function refreshes dropdowns (if any)
   // If your system doesn’t use dropdowns, this just does nothing safely.
   console.log('populateContDropdown() was called — no action needed.');
+  function populateContDropdown(){
+  const dropdown = document.getElementById('teacherDropdown'); // change this to your dropdown ID
+  if(!dropdown){
+    console.warn('Dropdown not found.');
+    return;
+  }
+
+  // Clear old entries
+  dropdown.innerHTML = '';
+
+  // Add default option
+  const defaultOption = document.createElement('option');
+  defaultOption.textContent = 'Select a Teacher';
+  defaultOption.value = '';
+  dropdown.appendChild(defaultOption);
+
+  // Add teachers from the imported data
+  faculty.forEach(t => {
+    const option = document.createElement('option');
+    option.textContent = `${t.lname}, ${t.fname} ${t.mname ? t.mname[0] + '.' : ''}`;
+    option.value = t.empno || t.lname; // use employee number if available
+    dropdown.appendChild(option);
+  });
+
+  console.log('Teacher dropdown updated with', faculty.length, 'entries.');
+}
+
 }
 
 }
@@ -614,6 +641,7 @@ function populateContDropdown(){
 
 </body>
 </html>
+
 
 
 
