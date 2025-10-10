@@ -180,6 +180,8 @@
     </div>
   </div>
 </div>
+<button id="importExcelBtn">📁 Import from Excel</button>
+<input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display:none;">
 
 <!-- Teacher Info Modal (full table) -->
 <div id="infoModal" class="modal"><div class="panel"><h3>Teacher Information</h3>
@@ -544,5 +546,79 @@ renderTableFiltered();
 if(!localStorage.getItem(STORAGE_KEY)) persist();
 if(!localStorage.getItem(CONT_KEY)) persistCont();
 </script>
+  <!-- SheetJS (for reading Excel) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+// IMPORT FROM EXCEL FEATURE
+const importExcelBtn = document.getElementById('importExcelBtn');
+const excelFileInput = document.getElementById('excelFileInput');
+
+importExcelBtn.addEventListener('click', () => excelFileInput.click());
+
+excelFileInput.addEventListener('change', handleExcelImport);
+
+function handleExcelImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const importedData = XLSX.utils.sheet_to_json(sheet);
+
+    importedData.forEach(row => {
+      const teacher = {
+        firstName: (row["First Name"] || "").toString().toUpperCase(),
+        middleName: (row["Middle Name"] || "").toString().toUpperCase(),
+        lastName: (row["Last Name"] || "").toString().toUpperCase(),
+        position: (row["Position"] || "").toString().toUpperCase(),
+        employeeNumber: (row["Employee Number"] || "").toString().toUpperCase(),
+        sex: (row["Sex"] || "").toString().toUpperCase(),
+        age: (row["Age"] || "").toString().toUpperCase(),
+        address: (row["Address"] || "").toString().toUpperCase(),
+        contactNumber: (row["Contact Number"] || "").toString().toUpperCase(),
+        email: (row["Email"] || "").toString(),
+        specialization: (row["Specialization"] || "").toString().toUpperCase()
+      };
+
+      const allFieldsFilled = Object.values(teacher).every(val => val.trim() !== "");
+      if (allFieldsFilled) {
+        addTeacherToTable(teacher);
+        saveTeacherToLocalStorage(teacher);
+      }
+    });
+    alert("✅ Excel data successfully imported!");
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function saveTeacherToLocalStorage(teacher) {
+  let teachers = JSON.parse(localStorage.getItem('teachers')) || [];
+  teachers.push(teacher);
+  localStorage.setItem('teachers', JSON.stringify(teachers));
+}
+
+function addTeacherToTable(teacher) {
+  const table = document.getElementById('teacherTable');
+  const newRow = table.insertRow();
+  newRow.insertCell(0).innerText = teacher.firstName;
+  newRow.insertCell(1).innerText = teacher.middleName;
+  newRow.insertCell(2).innerText = teacher.lastName;
+  newRow.insertCell(3).innerText = teacher.position;
+  newRow.insertCell(4).innerText = teacher.employeeNumber;
+  newRow.insertCell(5).innerText = teacher.sex;
+  newRow.insertCell(6).innerText = teacher.age;
+  newRow.insertCell(7).innerText = teacher.address;
+  newRow.insertCell(8).innerText = teacher.contactNumber;
+  newRow.insertCell(9).innerText = teacher.email;
+  newRow.insertCell(10).innerText = teacher.specialization;
+}
+</script>
+
 </body>
 </html>
+
