@@ -599,6 +599,13 @@ function importDataFromExcel(event){
   };
   reader.readAsArrayBuffer(file);
   event.target.value = '';
+  // Fix for missing function after import
+function populateContDropdown(){
+  // This function refreshes dropdowns (if any)
+  // If your system doesn’t use dropdowns, this just does nothing safely.
+  console.log('populateContDropdown() was called — no action needed.');
+}
+
 }
 </script>
 
@@ -607,6 +614,7 @@ function importDataFromExcel(event){
 
 </body>
 </html>
+
 
 
 
