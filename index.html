@@ -138,9 +138,7 @@
     </table>
   </section>
 </main>
-  
-<button id="importExcelBtn">📁 Import from Excel</button>
-<input type="file" id="excelFileInput" accept=".xlsx, .xls";">
+
 <!-- Add/Edit Teacher Modal -->
 <div id="teacherModal" class="modal" aria-hidden="true">
   <div class="panel" role="dialog" aria-modal="true">
@@ -550,106 +548,12 @@ if(!localStorage.getItem(CONT_KEY)) persistCont();
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
-// ======= IMPORT BUTTON TRIGGER =======
-document.addEventListener("DOMContentLoaded", () => {
-  const importBtn = document.getElementById("importExcelBtn");
-  const fileInput = document.getElementById("excelFileInput");
-
-  if (importBtn && fileInput) {
-    importBtn.addEventListener("click", () => {
-      // ✅ Show file chooser
-      fileInput.value = ""; // reset file input
-      fileInput.click();
-    });
-
-    // ✅ When file selected
-    fileInput.addEventListener("change", handleExcelImport);
-  }
-});
-
-function handleExcelImport(event) {
-  const file = event.target.files[0];
-  if (!file) {
-    alert("⚠️ No file selected.");
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const importedData = XLSX.utils.sheet_to_json(sheet);
-
-      if (importedData.length === 0) {
-        alert("⚠️ No data found in the Excel file.");
-        return;
-      }
-
-      importedData.forEach(row => {
-        const teacher = {
-          firstName: (row["First Name"] || "").toString().trim(),
-          middleName: (row["Middle Name"] || "").toString().trim(),
-          lastName: (row["Last Name"] || "").toString().trim(),
-          position: (row["Position"] || "").toString().trim(),
-          employeeNumber: (row["Employee Number"] || "").toString().trim(),
-          sex: (row["Sex"] || "").toString().trim(),
-          age: (row["Age"] || "").toString().trim(),
-          address: (row["Address"] || "").toString().trim(),
-          contactNumber: (row["Contact Number"] || "").toString().trim(),
-          email: (row["Email"] || "").toString().trim(),
-          specialization: (row["Specialization"] || "").toString().trim()
-        };
-
-        // ✅ Skip incomplete records
-        const allFieldsFilled = Object.values(teacher).every(val => val !== "");
-        if (!allFieldsFilled) return;
-
-        // ✅ Save to local storage and display
-        addTeacherToTable(teacher);
-        saveTeacherToLocalStorage(teacher);
-      });
-
-      alert("✅ Excel file imported successfully!");
-    } catch (err) {
-      alert("❌ Failed to read Excel file. Please check the format.");
-      console.error(err);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-// ======= SAVE TO LOCAL STORAGE =======
-function saveTeacherToLocalStorage(teacher) {
-  const teachers = JSON.parse(localStorage.getItem('teachers')) || [];
-  teachers.push(teacher);
-  localStorage.setItem('teachers', JSON.stringify(teachers));
-}
-
-// ======= ADD TEACHER TO TABLE =======
-function addTeacherToTable(teacher) {
-  const table = document.getElementById('teacherTable');
-  if (!table) return;
-
-  const newRow = table.insertRow();
-  newRow.insertCell(0).innerText = teacher.firstName;
-  newRow.insertCell(1).innerText = teacher.middleName;
-  newRow.insertCell(2).innerText = teacher.lastName;
-  newRow.insertCell(3).innerText = teacher.position;
-  newRow.insertCell(4).innerText = teacher.employeeNumber;
-  newRow.insertCell(5).innerText = teacher.sex;
-  newRow.insertCell(6).innerText = teacher.age;
-  newRow.insertCell(7).innerText = teacher.address;
-  newRow.insertCell(8).innerText = teacher.contactNumber;
-  newRow.insertCell(9).innerText = teacher.email;
-  newRow.insertCell(10).innerText = teacher.specialization;
 }
 </script>
 
 </body>
 </html>
+
 
 
 
