@@ -117,7 +117,7 @@
       <button onclick="clearAllData()">🗑️ Clear All (Admin)</button>
     </div>
   </div>
-<input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="importDataFromExcel(event)">
+<input type="file" id="importFile" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" style="display:none" onchange="importDataFromExcel(event)">
 <button onclick="document.getElementById('importFile').click()">📥 Import Excel</button>
 
   <section>
@@ -597,6 +597,7 @@ if(!localStorage.getItem(CONT_KEY)) persistCont();
 
 </body>
 </html>
+
 
 
 
