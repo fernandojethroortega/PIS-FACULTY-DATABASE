@@ -550,7 +550,7 @@ if(!localStorage.getItem(CONT_KEY)) persistCont();
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
-}function importDataFromExcel(event){
+function importDataFromExcel(event){
   if(!adminAccess){ alert('Admin required to import data'); return; }
   const file = event.target.files[0];
   if(!file) return;
@@ -561,42 +561,63 @@ if(!localStorage.getItem(CONT_KEY)) persistCont();
     const workbook = XLSX.read(data, {type:'array'});
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, {defval:''});
+    let jsonData = XLSX.utils.sheet_to_json(worksheet, {header:1, defval:''});
 
+    // Automatically detect the header row
+    let headerRowIndex = jsonData.findIndex(row => 
+      row.some(cell => /first|name|position|sex|emp/i.test(cell))
+    );
+
+    if(headerRowIndex === -1){
+      alert('No recognizable header row found. Please check your Excel file.');
+      return;
+    }
+
+    const headers = jsonData[headerRowIndex].map(h => h.toString().trim().toUpperCase());
+    const rows = jsonData.slice(headerRowIndex + 1);
     let importedCount = 0;
-    jsonData.forEach(row => {
-      try {
-        const t = {
-          fname: (row['FIRST']||'').toString().trim().toUpperCase(),
-          mname: (row['MIDDLE']||'').toString().trim().toUpperCase(),
-          lname: (row['LAST']||'').toString().trim().toUpperCase(),
-          position: (row['POSITION']||'').toString().trim().toUpperCase(),
-          empno: (row['EMP_NO']||'').toString().trim().toUpperCase(),
-          sex: (row['SEX']||'').toString().trim().toUpperCase(),
-          age: (row['AGE']||'').toString().trim(),
-          address: (row['ADDRESS']||'').toString().trim().toUpperCase(),
-          contact: (row['CONTACT']||'').toString().trim().toUpperCase(),
-          email: (row['EMAIL']||'').toString().trim(),
-          special: (row['SPECIAL']||'').toString().trim().toUpperCase(),
-          schedules: []
-        };
-        if(row['SCHEDULES_JSON']) {
-          t.schedules = JSON.parse(row['SCHEDULES_JSON']);
-        }
-        if(!faculty.some(f=>f.empno === t.empno)){ faculty.push(t); importedCount++; }
-      } catch(err){ console.warn('Error importing row', row, err); }
+
+    rows.forEach(row => {
+      const obj = {};
+      headers.forEach((key, i) => obj[key] = (row[i] || '').toString().trim());
+      if(!obj['FIRST'] && !obj['LAST']) return;
+
+      const t = {
+        fname: obj['FIRST'] || obj['FIRST NAME'] || '',
+        mname: obj['MIDDLE'] || obj['MIDDLE NAME'] || '',
+        lname: obj['LAST'] || obj['LAST NAME'] || '',
+        position: obj['POSITION'] || obj['JOB TITLE'] || '',
+        empno: obj['EMP_NO'] || obj['EMP NO'] || obj['EMPLOYEE NO'] || '',
+        sex: obj['SEX'] || obj['GENDER'] || '',
+        age: obj['AGE'] || '',
+        address: obj['ADDRESS'] || '',
+        contact: obj['CONTACT'] || obj['CONTACT NO'] || '',
+        email: obj['EMAIL'] || '',
+        special: obj['SPECIAL'] || obj['SPECIALIZATION'] || '',
+        schedules: []
+      };
+
+      if(!faculty.some(f => f.empno === t.empno)){ 
+        faculty.push(t); 
+        importedCount++; 
+      }
     });
-    persist(); renderTableFiltered();
+
+    persist();
+    renderTableFiltered();
     alert(`${importedCount} teacher(s) imported successfully.`);
   };
   reader.readAsArrayBuffer(file);
   event.target.value='';
 }
 
+}
+
 </script>
 
 </body>
 </html>
+
 
 
 
