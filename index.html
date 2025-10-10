@@ -117,9 +117,6 @@
       <button onclick="clearAllData()">🗑️ Clear All (Admin)</button>
     </div>
   </div>
-<input type="file" id="importFile" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" style="display:none" onchange="importDataFromExcel(event)">
-<button onclick="document.getElementById('importFile').click()">📥 Import Excel</button>
-
   <section>
     <table id="facultyTable" aria-live="polite">
       <thead>
@@ -546,94 +543,9 @@ renderTableFiltered();
 if(!localStorage.getItem(STORAGE_KEY)) persist();
 if(!localStorage.getItem(CONT_KEY)) persistCont();
 </script>
-  <!-- ✅ Excel Import Feature (SheetJS) -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
-<input type="file" id="excelFile" accept=".xlsx,.csv" onchange="importDataFromExcel(event)" />
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<script>
-function importDataFromExcel(event){
-  const file = event.target.files[0];
-  if(!file){ alert('Please select a file'); return; }
-
-  const reader = new FileReader();
-  reader.onload = function(e){
-    try {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, {type:'array'});
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, {defval:''});
-
-      let importedCount = 0;
-      jsonData.forEach(row => {
-        const t = {
-          fname: row['First Name'] || row['FIRST NAME'] || row['Firstname'] || '',
-          mname: row['Middle Name'] || row['MIDDLE NAME'] || '',
-          lname: row['Last Name'] || row['LAST NAME'] || '',
-          position: row['Position'] || row['POSITION'] || '',
-          empno: row['Employee No'] || row['EMP NO'] || '',
-          sex: row['Sex'] || row['Gender'] || '',
-          age: row['Age'] || '',
-          address: row['Address'] || '',
-          contact: row['Contact'] || '',
-          email: row['Email'] || '',
-          special: row['Specialization'] || row['Special'] || '',
-          schedules: []
-        };
-        if(t.fname || t.lname){
-          faculty.push(t);
-          importedCount++;
-        }
-      });
-
-      persist();
-      renderTableFiltered();
-      alert(importedCount + " teacher(s) imported successfully!");
-    } catch(err){
-      alert("Error reading file: " + err.message);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-  event.target.value = '';
-  // Fix for missing function after import
-function populateContDropdown(){
-  // This function refreshes dropdowns (if any)
-  // If your system doesn’t use dropdowns, this just does nothing safely.
-  console.log('populateContDropdown() was called — no action needed.');
-  function populateContDropdown(){
-  const dropdown = document.getElementById('teacherDropdown'); // change this to your dropdown ID
-  if(!dropdown){
-    console.warn('Dropdown not found.');
-    return;
-  }
-
-  // Clear old entries
-  dropdown.innerHTML = '';
-
-  // Add default option
-  const defaultOption = document.createElement('option');
-  defaultOption.textContent = 'Select a Teacher';
-  defaultOption.value = '';
-  dropdown.appendChild(defaultOption);
-
-  // Add teachers from the imported data
-  faculty.forEach(t => {
-    const option = document.createElement('option');
-    option.textContent = `${t.lname}, ${t.fname} ${t.mname ? t.mname[0] + '.' : ''}`;
-    option.value = t.empno || t.lname; // use employee number if available
-    dropdown.appendChild(option);
-  });
-
-  console.log('Teacher dropdown updated with', faculty.length, 'entries.');
-}
-
-}
-
-}
 </script>
 
 
@@ -641,6 +553,7 @@ function populateContDropdown(){
 
 </body>
 </html>
+
 
 
 
