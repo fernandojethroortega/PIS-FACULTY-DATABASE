@@ -6,19 +6,22 @@
 <title>Pagudpud Integrated School - Faculty Dashboard</title>
 <style>
   :root { --blue:#0d3b66; --gold:#ffb703; --bg:#fff8e7; }
-  body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:var(--bg);margin:0;color:#111}
-  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;background:var(--gold);color:var(--blue);padding:12px 16px;box-shadow:0 3px 8px rgba(0,0,0,.12)}
-  .brand{display:flex;align-items:center;gap:12px}
+  body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:var(--bg);margin:0;color:#111; min-height:100vh; display:flex; flex-direction:column;}
+  header{display:flex;align-items:center;justify-content:space-between;background:var(--gold);color:var(--blue);padding:12px 16px;box-shadow:0 3px 8px rgba(0,0,0,.12);gap:12px}
+  .brand{display:flex;align-items:center;gap:12px;flex:0 0 auto}
   .brand img{width:72px;height:72px;border-radius:50%;object-fit:contain}
   .brand h1{font-size:18px;margin:0}
-  .header-actions{display:flex;gap:8px;align-items:center}
+  .header-center{flex:1;text-align:center}
+  .header-center .clock{font-weight:600;color:var(--blue);font-size:14px}
+  .header-center .clock small{display:block;font-size:12px;color:#123}
+  .header-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}
   .icon-btn{background:transparent;border:1px solid rgba(13,59,102,0.15);padding:8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px}
   .icon-btn .emoji{font-size:18px}
   #adminLogin{display:flex;gap:6px;align-items:center}
   #adminLogin input{padding:6px;border-radius:6px;border:1px solid #ccc}
   #adminLogin button{background:var(--blue);color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer}
 
-  main{padding:14px}
+  main{padding:14px; flex:1}
   .topbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px}
   .search{flex:1;min-width:200px;max-width:520px}
   .search input{width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;text-transform:uppercase}
@@ -54,12 +57,6 @@
   .info-table{width:100%;border-collapse:collapse;margin-top:8px}
   .info-table th, .info-table td{border:1px solid #eee;padding:8px;text-align:left;background:#fff}
 
-  /* weekly schedule table */
-  .week-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
-  .week-table th, .week-table td{border:1px solid #ddd;padding:6px;text-align:center;vertical-align:middle;background:#fff}
-  .week-table th{background:var(--gold);color:var(--blue)}
-  .class-block{background:#f0f8ff;padding:6px;border-radius:4px;font-size:12px}
-
   @media (max-width:920px){
     .modal .panel{max-width:96%}
   }
@@ -71,6 +68,8 @@
     .modal .panel{margin:10% 6%}
     th,td{font-size:12px}
   }
+
+  footer{background:#fff;padding:10px 14px;text-align:center;border-top:1px solid #eee;color:#444;font-size:13px}
 </style>
 </head>
 <body>
@@ -82,6 +81,11 @@
       <h1>Pagudpud Integrated School</h1>
       <div class="large">Faculty Management System</div>
     </div>
+  </div>
+
+  <div class="header-center">
+    <div class="clock" id="headerClock">--</div>
+    <small style="color:var(--blue); font-weight:500" id="headerClockSub"></small>
   </div>
 
   <div class="header-actions">
@@ -189,13 +193,6 @@
   <div class="row-actions"><button onclick="closeInfoModal()">Close</button></div>
 </div></div>
 
-<!-- Weekly Schedule Modal (per teacher) -->
-<div id="weekModal" class="modal"><div class="panel"><h3 id="weekTitle">Weekly Schedule</h3>
-  <div class="small">Columns: Monday → Sunday. Rows show time slots for this teacher (sorted).</div>
-  <div id="weekContainer" style="margin-top:10px;overflow:auto"></div>
-  <div class="row-actions"><button onclick="closeWeekModal()">Close</button></div>
-</div></div>
-
 <!-- Vacant Now Modal -->
 <div id="vacantModal" class="modal"><div class="panel"><h3>Vacant Teachers (Now)</h3>
   <div id="vacantListNow" class="schedule-list"></div>
@@ -276,17 +273,22 @@
   </div>
 </div></div>
 
+<footer>All Rights Reserved</footer>
+
 <script>
 /* ============================
-  Combined system with:
-  - faculty add/edit/delete/view
-  - schedules per teacher
-  - vacant checker
-  - contingency plan generator
-  - view complete teacher info (table)
-  - view weekly schedule per teacher (table)
-  - persistence via localStorage
-  - admin access for edits (ADMIN123)
+  Cleaned system:
+  - Weekly Schedule feature removed (HTML, button, JS)
+  - Real-time header clock added (#headerClock, #headerClockSub)
+  - Footer added ("All Rights Reserved")
+  - Rest of features preserved:
+    - faculty add/edit/delete/view
+    - schedules per teacher (list)
+    - vacant checker
+    - contingency plan generator
+    - view complete teacher info (table)
+    - persistence via localStorage
+    - admin access for edits (ADMIN123)
 =============================*/
 
 const STORAGE_KEY = 'pis_faculty_v_final';
@@ -309,6 +311,20 @@ document.addEventListener('input', e=>{
     el.value = el.value.toUpperCase();
   }
 });
+
+/* Header clock (real-time) */
+function updateClock(){
+  const now = new Date();
+  // Format date: Weekday, Month Day, Year
+  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const timeOptions = { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true };
+  const dateStr = now.toLocaleDateString(undefined, dateOptions);
+  const timeStr = now.toLocaleTimeString(undefined, timeOptions);
+  document.getElementById('headerClock').innerText = timeStr;
+  document.getElementById('headerClockSub').innerText = dateStr;
+}
+updateClock();
+setInterval(updateClock, 1000);
 
 /* Admin login */
 function adminLogin(){
@@ -334,7 +350,6 @@ function renderTableFiltered(){
       <td>${renderScheduleSummary(t.schedules)}</td>
       <td class="actions-cell">
         <button onclick="viewInfo(${i})">View Info</button>
-        <button onclick="viewWeekly(${i})">View Schedule</button>
         <button onclick="openEdit(${i})">Edit</button>
         <button style="background:#e74c3c" onclick="deleteTeacher(${i})">Delete</button>
       </td>`;
@@ -402,48 +417,6 @@ function viewInfo(i){
   document.getElementById('infoModal').style.display='block';
 }
 function closeInfoModal(){ document.getElementById('infoModal').style.display='none'; }
-
-/* Weekly schedule view per teacher */
-function viewWeekly(i){
-  const t = faculty[i];
-  document.getElementById('weekTitle').innerText = `Weekly Schedule — ${t.fname} ${t.lname} (${t.empno})`;
-  const weeks = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
-  // collect unique time boundaries from this teacher schedules
-  const times = new Set();
-  (t.schedules||[]).forEach(s=>{ times.add(s.start); times.add(s.end); });
-  // if no schedules, show empty message
-  if(times.size === 0){
-    document.getElementById('weekContainer').innerHTML = '<div class="small">No schedule for this teacher.</div>';
-    document.getElementById('weekModal').style.display='block';
-    return;
-  }
-  const sortedTimes = Array.from(times).sort();
-  // build contiguous rows from sortedTimes (start-end pairs)
-  const rows = [];
-  for(let i2=0;i2<sortedTimes.length-1;i2++){
-    rows.push({start:sortedTimes[i2], end:sortedTimes[i2+1]});
-  }
-  // build table
-  let html = '<table class="week-table"><thead><tr><th>Time</th>';
-  weeks.forEach(d=> html += `<th>${d.slice(0,3)}</th>`);
-  html += '</tr></thead><tbody>';
-  rows.forEach(r=>{
-    html += `<tr><th style="text-align:center">${r.start} - ${r.end}</th>`;
-    weeks.forEach(day=>{
-      // find classes of this teacher overlapping r.start-r.end on this day
-      const classes = (t.schedules||[]).filter(s => s.day === day && ((s.start < r.end) && (s.end > r.start)));
-      if(classes.length === 0) html += '<td></td>';
-      else {
-        html += '<td>' + classes.map(c => `<div class="class-block">${c.subject} • ${c.room}<br><small>${c.start}-${c.end}</small></div>`).join('') + '</td>';
-      }
-    });
-    html += '</tr>';
-  });
-  html += '</tbody></table>';
-  document.getElementById('weekContainer').innerHTML = html;
-  document.getElementById('weekModal').style.display='block';
-}
-function closeWeekModal(){ document.getElementById('weekModal').style.display='none'; }
 
 /* Vacant detection helpers */
 function getCurrentDayTime(){ const now=new Date(); const days=['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY']; const day=days[now.getDay()]; const hh=String(now.getHours()).padStart(2,'0'); const mm=String(now.getMinutes()).padStart(2,'0'); const time=`${hh}:${mm}`; return {day,time}; }
@@ -539,6 +512,16 @@ document.addEventListener('keydown', e=> { if(e.key === 'Escape') document.query
 /* Clear all data (admin only) */
 function clearAllData(){ if(!adminAccess){ alert('Admin required'); return; } if(!confirm('Erase ALL saved data? This cannot be undone.')) return; faculty=[]; contingency=[]; persist(); persistCont(); renderTableFiltered(); }
 
+/* Helper to populate contingency absent dropdown */
+function populateContDropdown(){
+  const sel = document.getElementById('cont_absent');
+  if(!sel) return;
+  const current = sel.value || '';
+  sel.innerHTML = '<option value="">Select Absent Teacher</option>';
+  faculty.forEach(t=>{ const opt=document.createElement('option'); opt.value=t.empno; opt.text=`${t.fname} ${t.lname} — ${t.empno}`; sel.appendChild(opt); });
+  sel.value = current;
+}
+
 /* initial render */
 renderTableFiltered();
 if(!localStorage.getItem(STORAGE_KEY)) persist();
@@ -546,5 +529,3 @@ if(!localStorage.getItem(CONT_KEY)) persistCont();
 </script>
 </body>
 </html>
-
-
