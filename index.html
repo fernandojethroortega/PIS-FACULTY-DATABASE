@@ -3,390 +3,542 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Contingency Planner — Pagudpud Integrated School</title>
+<title>Pagudpud Integrated School - Faculty Dashboard</title>
 <style>
-  :root{--blue:#0d3b66;--gold:#ffb703;--bg:#fff8e7}
-  body{font-family:Segoe UI, Tahoma, Geneva, Verdana,sans-serif;background:var(--bg);margin:0;color:#111;padding:18px}
-  header{display:flex;align-items:center;justify-content:space-between;background:var(--gold);color:var(--blue);padding:12px 16px;border-radius:8px;box-shadow:0 3px 6px rgba(0,0,0,.12);margin-bottom:18px}
-  header h1{font-size:16px;margin:0}
-  .controls{display:flex;gap:8px;align-items:center}
-  .card{background:#fff;border-radius:8px;padding:12px;box-shadow:0 3px 8px rgba(0,0,0,.06);margin-bottom:12px}
-  label{display:block;font-size:13px;margin-bottom:6px;color:#222}
-  select,input[type=date],input[type=time],input[type=text]{width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px}
-  .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
-  th,td{border:1px solid #ddd;padding:8px;text-align:left}
+  :root { --blue:#0d3b66; --gold:#ffb703; --bg:#fff8e7; }
+  body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:var(--bg);margin:0;color:#111; min-height:100vh; display:flex; flex-direction:column;}
+  header{display:flex;align-items:center;justify-content:space-between;background:var(--gold);color:var(--blue);padding:12px 16px;box-shadow:0 3px 8px rgba(0,0,0,.12);gap:12px}
+  .brand{display:flex;align-items:center;gap:12px;flex:0 0 auto}
+  .brand img{width:72px;height:72px;border-radius:50%;object-fit:contain}
+  .brand h1{font-size:18px;margin:0}
+  .header-center{flex:1;text-align:center}
+  .header-center .clock{font-weight:700;color:var(--blue);font-size:14px}
+  .header-center .clock small{display:block;font-size:12px;color:#123}
+  .header-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}
+  .icon-btn{background:transparent;border:1px solid rgba(13,59,102,0.15);padding:8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px}
+  .icon-btn .emoji{font-size:18px}
+  #adminLogin{display:flex;gap:6px;align-items:center}
+  #adminLogin input{padding:6px;border-radius:6px;border:1px solid #ccc}
+  #adminLogin button{background:var(--blue);color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer}
+
+  main{padding:14px; flex:1}
+  .topbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .search{flex:1;min-width:200px;max-width:520px}
+  .search input{width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;text-transform:uppercase}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .controls button{background:var(--blue);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+  .controls button.secondary{background:var(--gold);color:var(--blue);border:1px solid var(--blue)}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
   th{background:var(--gold);color:var(--blue);text-transform:uppercase;font-size:12px}
-  .small{font-size:13px;color:#555}
-  button{background:var(--blue);color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
-  button.secondary{background:var(--gold);color:var(--blue);border:1px solid var(--blue)}
-  .muted{background:#fafafa;padding:10px;border-radius:6px;border:1px dashed #eee}
-  .row{display:flex;gap:8px;align-items:center}
-  .flex{display:flex;gap:8px}
-  .right{display:flex;justify-content:flex-end;gap:8px}
-  .link{background:transparent;color:var(--blue);border:1px solid rgba(13,59,102,0.12);padding:6px;border-radius:6px;cursor:pointer}
-  .assign-select{width:100%}
+  td small{display:block;color:#444;font-size:12px;margin-top:6px}
+  .actions-cell{display:flex;gap:6px;flex-wrap:wrap}
+  .pill{background:#f3f3f3;border-radius:6px;padding:4px 6px;font-size:12px}
+
+  /* Modal */
+  .modal{display:none;position:fixed;z-index:999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);overflow:auto}
+  .modal .panel{background:#fff;margin:4% auto;padding:14px;border-radius:10px;width:95%;max-width:920px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  .modal .panel h3{margin:0 0 8px 0;color:var(--blue)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .grid .full{grid-column:1/3}
+  input[type=text], input[type=email], input[type=number], select, textarea, input[type=time], input[type=date] { width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px; }
+  label{font-size:13px;color:#222;margin-top:6px;display:block}
+  .small{font-size:12px;color:#555}
+  .row-actions{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
+  .schedule-list{max-height:260px;overflow:auto;border:1px dashed #ddd;padding:8px;border-radius:6px;background:#fafafa}
+  .schedule-item{display:flex;justify-content:space-between;gap:8px;padding:6px;border-bottom:1px solid #eee}
+  .schedule-item:last-child{border-bottom:none}
+
+  /* contingency table inline small */
+  #contTable{width:100%;border-collapse:collapse;margin-top:12px}
+  #contTable th, #contTable td{border:1px solid #ddd;padding:6px;font-size:13px}
+
+  /* teacher info table */
+  .info-table{width:100%;border-collapse:collapse;margin-top:8px}
+  .info-table th, .info-table td{border:1px solid #eee;padding:8px;text-align:left;background:#fff}
+
+  @media (max-width:920px){
+    .modal .panel{max-width:96%}
+  }
+  @media (max-width:720px){
+    .grid{grid-template-columns:1fr}
+    header{padding:10px}
+    .brand h1{font-size:16px}
+    .search input{max-width:100%}
+    .modal .panel{margin:10% 6%}
+    th,td{font-size:12px}
+  }
+
+  footer{background:#fff;padding:10px 14px;text-align:center;border-top:1px solid #eee;color:#444;font-size:13px}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Contingency Plan Generator</h1>
-  <div class="controls">
-    <button onclick="goBack()">← Back to Dashboard</button>
-    <button class="secondary" onclick="exportContingencyCSV()">Export Contingency CSV</button>
+  <div class="brand">
+    <img src="PIS OFFICIAL SEAL.png" alt="logo">
+    <div>
+      <h1>Pagudpud Integrated School</h1>
+      <div class="large">Faculty Management System</div>
+    </div>
+  </div>
+
+  <div class="header-center">
+    <div class="clock" id="headerClock">--</div>
+    <small id="headerClockSub"></small>
+  </div>
+
+  <div class="header-actions">
+    <button class="icon-btn" title="Vacant Now" onclick="openVacantModal()">
+      <span class="emoji">⏳</span><span>Vacant Now</span>
+    </button>
+
+    <button class="icon-btn" title="Check Vacant at day/time" onclick="openVacantChecker()">
+      <span class="emoji">🔎</span><span>Check Vacant</span>
+    </button>
+
+    <button class="icon-btn" title="Teacher Schedules (list)" onclick="openSchedulesModal()">
+      <span class="emoji">📅</span><span>Schedules</span>
+    </button>
+
+    <button class="icon-btn" title="Contingency Plans" onclick="openContingencyModal()">
+      <span class="emoji">🆘</span><span>Contingency</span>
+    </button>
+
+    <div id="adminLogin">
+      <input id="adminPass" type="password" placeholder="Admin password">
+      <button onclick="adminLogin()">Admin</button>
+    </div>
   </div>
 </header>
 
-<div class="card">
-  <div class="two">
-    <div>
-      <label for="absentSelect">Select Absent Teacher</label>
-      <select id="absentSelect"><option value="">-- Select teacher --</option></select>
-    </div>
-    <div>
-      <label for="absentDate">Date of Absence</label>
-      <input id="absentDate" type="date">
+<main>
+  <div class="topbar">
+    <div class="search"><input id="searchInput" placeholder="Search by name / position / specialization" oninput="renderTableFiltered()"></div>
+    <div class="controls">
+      <button onclick="triggerAdd()">➕ Add Teacher</button>
+      <button class="secondary" onclick="exportCSV()">📤 Export CSV</button>
+      <button onclick="clearAllData()">🗑️ Clear All (Admin)</button>
     </div>
   </div>
 
-  <div style="margin-top:10px" class="row">
-    <div style="flex:1">
-      <label>Teacher's schedule for chosen date (editable)</label>
-      <div id="scheduleArea" class="muted small">Select a teacher and date to view schedule.</div>
-    </div>
-    <div style="width:260px">
-      <label>Add schedule row (for selected teacher)</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-        <input id="ns_day" placeholder="DAY (e.g., MONDAY)" type="text">
-        <input id="ns_time" placeholder="Start-End (HH:MM-HH:MM)" type="text">
+  <section>
+    <table id="facultyTable" aria-live="polite">
+      <thead>
+        <tr>
+          <th>#</th><th>Full Name</th><th>Position</th><th>Employee No.</th><th>Specialization</th><th>Schedules</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- Contingency quick table (recent plans) -->
+  <section style="margin-top:14px;">
+    <h3 style="margin:0 0 8px 0;color:var(--blue)">Recent Contingency Plans</h3>
+    <table id="contTable">
+      <thead><tr><th>#</th><th>Absent Teacher</th><th>Substitute</th><th>Subject</th><th>Room</th><th>Date</th><th>Time</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</main>
+
+<!-- Add/Edit Teacher Modal -->
+<div id="teacherModal" class="modal" aria-hidden="true">
+  <div class="panel" role="dialog" aria-modal="true">
+    <h3 id="teacherModalTitle">Add Teacher</h3>
+    <div class="grid">
+      <div><label>First Name *</label><input id="t_first" type="text" placeholder="FIRST NAME"></div>
+      <div><label>Middle Name *</label><input id="t_middle" type="text" placeholder="MIDDLE NAME"></div>
+      <div><label>Last Name *</label><input id="t_last" type="text" placeholder="LAST NAME"></div>
+
+      <!-- Position dropdown (replaced input with select) -->
+      <div>
+        <label>Position *</label>
+        <select id="t_position">
+          <option value="">Select Position</option>
+          <option>TEACHER I</option>
+          <option>TEACHER II</option>
+          <option>TEACHER III</option>
+          <option>TEACHER IV</option>
+          <option>TEACHER V</option>
+          <option>TEACHER VI</option>
+          <option>TEACHER VII</option>
+          <option>MASTER TEACHER I</option>
+          <option>MASTER TEACHER II</option>
+          <option>MASTER TEACHER III</option>
+          <option>MASTER TEACHER IV</option>
+        </select>
       </div>
-      <input id="ns_subject" placeholder="Subject / Section" type="text" style="margin-bottom:6px">
-      <button onclick="addManualSchedule()">Add & Save</button>
-      <div class="small" style="margin-top:6px">If a teacher has no schedule, add rows here and Save. Use 24-hour times: 08:00-09:00</div>
+
+      <div><label>Employee Number *</label><input id="t_empno" type="text" placeholder="EMPLOYEE NUMBER"></div>
+      <div><label>Sex *</label><select id="t_sex"><option value="">Select</option><option>MALE</option><option>FEMALE</option></select></div>
+      <div><label>Age *</label><input id="t_age" type="number" min="18" placeholder="AGE"></div>
+      <div><label>Contact Number *</label><input id="t_contact" type="text" placeholder="CONTACT"></div>
+      <div class="full"><label>Address *</label><input id="t_address" type="text" placeholder="ADDRESS"></div>
+      <div><label>Email (lowercase) *</label><input id="t_email" type="email" placeholder="email@example.com"></div>
+      <div><label>Specialization *</label><input id="t_special" type="text" placeholder="SPECIALIZATION"></div>
+
+      <div class="full">
+        <label>Schedules (Day, Start - End, Subject, Room) — Add one by one *</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+          <select id="s_day" style="width:120px">
+            <option value="">DAY</option>
+            <option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option><option>FRIDAY</option><option>SATURDAY</option><option>SUNDAY</option>
+          </select>
+          <input id="s_start" type="time" style="width:120px">
+          <input id="s_end" type="time" style="width:120px">
+          <input id="s_subject" type="text" placeholder="SUBJECT" style="flex:1">
+          <input id="s_room" type="text" placeholder="ROOM" style="width:120px">
+          <button onclick="addScheduleItem()" style="background:var(--gold);color:var(--blue);border:none;padding:8px;border-radius:6px;cursor:pointer">Add</button>
+        </div>
+        <div class="schedule-list" id="scheduleList" aria-live="polite"></div>
+        <div class="small">Tip: Add all schedule rows for this teacher. Vacant & contingency use these schedules.</div>
+      </div>
+
+      <div class="full row-actions">
+        <button onclick="saveTeacher()">Save</button>
+        <button style="background:#ddd;color:var(--blue)" onclick="closeTeacherModal()">Cancel</button>
+      </div>
     </div>
   </div>
 </div>
 
-<div class="card">
-  <h3 style="margin:0 0 8px 0">Mark Absent Periods & Assign Substitutes</h3>
-  <div class="small">Check periods that will be absent, then choose available teachers for each checked slot.</div>
+<!-- Teacher Info Modal (full table) -->
+<div id="infoModal" class="modal"><div class="panel"><h3>Teacher Information</h3>
+  <table class="info-table" id="infoTable">
+    <tbody></tbody>
+  </table>
+  <div class="row-actions"><button onclick="closeInfoModal()">Close</button></div>
+</div></div>
 
-  <div id="periodList" style="margin-top:10px"></div>
+<!-- Vacant Now Modal -->
+<div id="vacantModal" class="modal"><div class="panel"><h3>Vacant Teachers (Now)</h3>
+  <div id="vacantListNow" class="schedule-list"></div>
+  <div class="row-actions"><button onclick="closeVacantModal()">Close</button></div>
+</div></div>
 
-  <div class="right" style="margin-top:12px">
-    <button onclick="generatePlan()">Generate & Save Plan</button>
+<!-- Vacant Checker Modal (day + time) -->
+<div id="vacantCheckerModal" class="modal"><div class="panel"><h3>Check Vacant at Day & Time</h3>
+  <div class="grid">
+    <div><label>Day</label><select id="checker_day"><option value="">Select Day</option><option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option><option>FRIDAY</option><option>SATURDAY</option><option>SUNDAY</option></select></div>
+    <div><label>Time</label><input id="checker_time" type="time"></div>
+    <div class="full small">Tip: Example input — 16:00 = 4:00 PM. Then click "Check".</div>
   </div>
-</div>
 
-<div class="card">
-  <h3 style="margin:0 0 8px 0">Generated Contingency Plans (Preview)</h3>
-  <div id="planPreview" class="muted small">No plan generated yet.</div>
-</div>
+  <div style="margin-top:10px">
+    <button onclick="runVacantChecker()">Check</button>
+    <button style="background:#ddd;color:var(--blue)" onclick="closeVacantChecker()">Cancel</button>
+  </div>
+
+  <hr style="margin:12px 0">
+
+  <div id="vacantCheckerResult" class="schedule-list"></div>
+
+  <div class="row-actions" style="margin-top:8px"><button onclick="closeVacantChecker()">Close</button></div>
+</div></div>
+
+<!-- Schedules Modal (list) -->
+<div id="schedulesModal" class="modal"><div class="panel"><h3>All Teacher Schedules</h3>
+  <div id="allSchedules" class="schedule-list"></div>
+  <div class="row-actions"><button onclick="closeSchedulesModal()">Close</button></div>
+</div></div>
+
+<!-- Contingency Modal -->
+<div id="contModal" class="modal"><div class="panel">
+  <h3>Contingency Plan Generator</h3>
+  <div class="grid">
+    <div>
+      <label>Absent Teacher *</label>
+      <select id="cont_absent">
+        <option value="">Select Absent Teacher</option>
+      </select>
+    </div>
+    <div>
+      <label>Date of Absence *</label>
+      <input id="cont_date" type="date">
+    </div>
+    <div>
+      <label>Start Time *</label>
+      <input id="cont_start" type="time">
+    </div>
+    <div>
+      <label>End Time *</label>
+      <input id="cont_end" type="time">
+    </div>
+    <div class="full"><label>Subject *</label><input id="cont_subject" type="text" placeholder="SUBJECT"></div>
+    <div class="full"><label>Room *</label><input id="cont_room" type="text" placeholder="ROOM"></div>
+  </div>
+
+  <div style="margin-top:10px">
+    <button onclick="findSubstitutes()">Find Available Substitutes</button>
+    <button style="background:#ddd;color:var(--blue)" onclick="closeContingencyModal()">Cancel</button>
+    <button style="background:#f1c40f;color:var(--blue);float:right" onclick="openContingencyList()">View Saved Plans</button>
+  </div>
+
+  <hr>
+
+  <div id="contCandidates" class="schedule-list"></div>
+
+  <div class="row-actions" style="margin-top:8px"><button onclick="closeContingencyModal()">Close</button></div>
+</div></div>
+
+<!-- Contingency List Modal -->
+<div id="contListModal" class="modal"><div class="panel"><h3>Saved Contingency Plans</h3>
+  <div id="contList" class="schedule-list"></div>
+  <div style="margin-top:10px" class="row-actions">
+    <button onclick="exportContingencyCSV()">Export Contingency CSV</button>
+    <button style="background:#ddd;color:var(--blue)" onclick="closeContingencyList()">Close</button>
+  </div>
+</div></div>
+
+<footer>All Rights Reserved</footer>
 
 <script>
-/* Contingency page script
-   - Uses same localStorage keys as the dashboard:
-     faculty key: 'pis_faculty_v_final'
-     contingency key: 'pis_contingency_v_final'
-*/
+/* ============================
+  Cleaned system with Position dropdown + full-format clock
+  - Weekly Schedule feature removed
+  - Clock shows full date & time (local)
+=============================*/
 
-const FAC_KEY = 'pis_faculty_v_final';
+const STORAGE_KEY = 'pis_faculty_v_final';
 const CONT_KEY = 'pis_contingency_v_final';
-
-let faculty = JSON.parse(localStorage.getItem(FAC_KEY) || '[]');
+let faculty = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 let contingency = JSON.parse(localStorage.getItem(CONT_KEY) || '[]');
+let adminAccess = false;
+let editingIndex = -1;
 
-const absentSelect = document.getElementById('absentSelect');
-const absentDate = document.getElementById('absentDate');
-const scheduleArea = document.getElementById('scheduleArea');
-const periodList = document.getElementById('periodList');
-const planPreview = document.getElementById('planPreview');
+/* Persist helpers */
+function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(faculty)); }
+function persistCont(){ localStorage.setItem(CONT_KEY, JSON.stringify(contingency)); }
 
-function goBack(){
-  // navigate back to index - adjust filename as needed
-  if(confirm('Go back to dashboard? Unsaved changes will be lost.')) window.location.href = 'index.html';
+/* Auto uppercase except email/time/number/date */
+document.addEventListener('input', e=>{
+  const el = e.target;
+  if(!el) return;
+  if(el.tagName==='INPUT' || el.tagName==='TEXTAREA' || el.tagName==='SELECT'){
+    if(el.type === 'email' || el.type === 'time' || el.type === 'number' || el.type === 'date') return;
+    // For selects, options are already uppercase; but keep this safe:
+    if(el.tagName === 'SELECT') return;
+    el.value = el.value.toUpperCase();
+  }
+});
+
+/* Header clock (real-time) - full format */
+function updateClock(){
+  const now = new Date();
+  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const timeOptions = { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true };
+  const dateStr = now.toLocaleDateString(undefined, dateOptions); // e.g., Saturday, October 11, 2025
+  const timeStr = now.toLocaleTimeString(undefined, timeOptions); // e.g., 11:45:30 AM
+  document.getElementById('headerClock').innerText = `${dateStr} — ${timeStr}`;
+  // show timezone below (if available)
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  document.getElementById('headerClockSub').innerText = tz ? `Time zone: ${tz}` : '';
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+/* Admin login */
+function adminLogin(){
+  const pw = document.getElementById('adminPass').value;
+  if(pw === 'ADMIN123'){ adminAccess = true; alert('Admin access granted'); }
+  else { alert('Incorrect password'); }
 }
 
-/* populate absent teacher dropdown */
-function loadFaculty(){
-  faculty = JSON.parse(localStorage.getItem(FAC_KEY) || '[]');
-  absentSelect.innerHTML = '<option value="">-- Select teacher --</option>';
-  faculty.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t.empno;
-    opt.text = `${t.fname} ${t.lname} — ${t.position || ''} (${t.empno})`;
-    absentSelect.appendChild(opt);
+/* Render main faculty table and contingency preview table */
+function renderTableFiltered(){
+  const q = (document.getElementById('searchInput').value || '').trim().toUpperCase();
+  const tbody = document.querySelector('#facultyTable tbody'); tbody.innerHTML = '';
+  faculty.forEach((t,i)=>{
+    const fullname = `${t.fname} ${t.mname} ${t.lname}`.trim();
+    if(q && !(fullname.includes(q) || (t.position||'').includes(q) || (t.special||'').includes(q) || (t.empno||'').includes(q))) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td><strong>${fullname}</strong><br><small>${t.email || ''}</small></td>
+      <td>${t.position}</td>
+      <td>${t.empno}</td>
+      <td>${t.special}</td>
+      <td>${renderScheduleSummary(t.schedules)}</td>
+      <td class="actions-cell">
+        <button onclick="viewInfo(${i})">View Info</button>
+        <button onclick="openEdit(${i})">Edit</button>
+        <button style="background:#e74c3c" onclick="deleteTeacher(${i})">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
   });
-}
-loadFaculty();
-
-/* helper: find teacher by empno */
-function getTeacher(empno){ return faculty.find(f => f.empno === empno); }
-
-/* parse a single schedule row string -> {day,start,end,subject,room(optional)}.
-   row format in t.schedules is assumed to be objects already; otherwise, we will use stored t.schedules
-*/
-function getSchedulesForDay(t, dayName){
-  if(!t || !t.schedules) return [];
-  return (t.schedules || []).filter(s => (s.day||'').toUpperCase() === dayName.toUpperCase())
-                .map(s => ({ day: s.day, start: s.start, end: s.end, subject: s.subject || '', room: s.room || '' }));
+  renderContTable();
+  populateContDropdown();
 }
 
-/* when absent selects change -> show schedule */
-absentSelect.addEventListener('change', renderSelectedTeacherSchedule);
-absentDate.addEventListener('change', renderSelectedTeacherSchedule);
+/* schedule summary helper */
+function renderScheduleSummary(sched=[]){
+  if(!sched || sched.length===0) return '<span class="pill">NO SCHEDULE</span>';
+  return sched.slice(0,2).map(s => `<div class="pill">${s.day} ${s.start}-${s.end} ${s.subject} (${s.room})</div>`).join(' ');
+}
 
-/* Show schedule and period checkboxes for selected teacher & date */
-function renderSelectedTeacherSchedule(){
-  const emp = absentSelect.value;
-  const dateVal = absentDate.value;
-  periodList.innerHTML = '';
-  planPreview.innerHTML = 'No plan generated yet.';
-  if(!emp || !dateVal){
-    scheduleArea.innerHTML = '<div class="small">Select both teacher and date to view schedule.</div>';
-    return;
+/* Teacher functions (Add/Edit/Delete/View Info) */
+function triggerAdd(){ if(!adminAccess){ alert('Please enter admin password first.'); return; } editingIndex = -1; openTeacherModal(); }
+function openTeacherModal(){ document.getElementById('teacherModalTitle').innerText = editingIndex===-1 ? 'Add Teacher' : 'Edit Teacher'; clearTeacherForm(); document.getElementById('teacherModal').style.display='block'; }
+function closeTeacherModal(){ document.getElementById('teacherModal').style.display='none'; editingIndex=-1; clearTeacherForm(); }
+function clearTeacherForm(){ ['t_first','t_middle','t_last','t_position','t_empno','t_sex','t_age','t_contact','t_address','t_email','t_special'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value='';}); document.getElementById('scheduleList').innerHTML=''; ['s_day','s_start','s_end','s_subject','s_room'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); }
+function addScheduleItem(){ const day=document.getElementById('s_day').value; const start=document.getElementById('s_start').value; const end=document.getElementById('s_end').value; const subject=(document.getElementById('s_subject').value||'').trim().toUpperCase(); const room=(document.getElementById('s_room').value||'').trim().toUpperCase(); if(!day||!start||!end||!subject||!room){ alert('Please complete schedule entry.'); return;} if(start>=end){ alert('Start must be before end.'); return;} const li=document.createElement('div'); li.className='schedule-item'; li.dataset.day=day; li.dataset.start=start; li.dataset.end=end; li.dataset.subject=subject; li.dataset.room=room; li.innerHTML=`<div>${day} ${start}-${end} • ${subject} • ${room}</div><div><button onclick="editScheduleItem(this)">✏️</button> <button onclick="removeScheduleItem(this)">🗑️</button></div>`; document.getElementById('scheduleList').appendChild(li); ['s_day','s_start','s_end','s_subject','s_room'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); }
+function editScheduleItem(btn){ const el=btn.closest('.schedule-item'); if(!el) return; document.getElementById('s_day').value=el.dataset.day; document.getElementById('s_start').value=el.dataset.start; document.getElementById('s_end').value=el.dataset.end; document.getElementById('s_subject').value=el.dataset.subject; document.getElementById('s_room').value=el.dataset.room; el.remove(); }
+function removeScheduleItem(btn){ const el=btn.closest('.schedule-item'); if(el) el.remove(); }
+
+function saveTeacher(){
+  const t = {
+    fname:(document.getElementById('t_first').value||'').trim().toUpperCase(),
+    mname:(document.getElementById('t_middle').value||'').trim().toUpperCase(),
+    lname:(document.getElementById('t_last').value||'').trim().toUpperCase(),
+    position:(document.getElementById('t_position').value||'').trim().toUpperCase(),
+    empno:(document.getElementById('t_empno').value||'').trim().toUpperCase(),
+    sex:(document.getElementById('t_sex').value||'').trim().toUpperCase(),
+    age:(document.getElementById('t_age').value||'').trim(),
+    contact:(document.getElementById('t_contact').value||'').trim().toUpperCase(),
+    address:(document.getElementById('t_address').value||'').trim().toUpperCase(),
+    email:(document.getElementById('t_email').value||'').trim(),
+    special:(document.getElementById('t_special').value||'').trim().toUpperCase()
+  };
+  for(const k of ['fname','mname','lname','position','empno','sex','age','contact','address','email','special']){
+    if(!t[k]){ alert('All fields (including Middle Name) are required.'); return; }
   }
-  const t = getTeacher(emp);
-  if(!t){
-    scheduleArea.innerHTML = '<div class="small">Teacher not found.</div>';
-    return;
-  }
+  const schedEls = Array.from(document.querySelectorAll('#scheduleList .schedule-item'));
+  if(schedEls.length === 0){ alert('At least one schedule entry is required.'); return; }
+  t.schedules = schedEls.map(el => ({ day: el.dataset.day, start: el.dataset.start, end: el.dataset.end, subject: el.dataset.subject, room: el.dataset.room }));
+  if(editingIndex >= 0){ faculty[editingIndex] = t; } else { faculty.push(t); }
+  persist(); renderTableFiltered(); closeTeacherModal();
+}
 
-  const d = new Date(dateVal);
-  const days = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
-  const dayName = days[d.getDay()];
+function openEdit(i){ if(!adminAccess){ alert('Admin required to edit'); return; } editingIndex = i; openTeacherModal(); const t = faculty[i]; document.getElementById('t_first').value=t.fname; document.getElementById('t_middle').value=t.mname; document.getElementById('t_last').value=t.lname; document.getElementById('t_position').value=t.position; document.getElementById('t_empno').value=t.empno; document.getElementById('t_sex').value=t.sex; document.getElementById('t_age').value=t.age; document.getElementById('t_contact').value=t.contact; document.getElementById('t_address').value=t.address; document.getElementById('t_email').value=t.email; document.getElementById('t_special').value=t.special; const list=document.getElementById('scheduleList'); list.innerHTML=''; (t.schedules||[]).forEach(s=>{ const li=document.createElement('div'); li.className='schedule-item'; li.dataset.day=s.day; li.dataset.start=s.start; li.dataset.end=s.end; li.dataset.subject=s.subject; li.dataset.room=s.room; li.innerHTML=`<div>${s.day} ${s.start}-${s.end} • ${s.subject} • ${s.room}</div><div><button onclick="editScheduleItem(this)">✏️</button> <button onclick="removeScheduleItem(this)">🗑️</button></div>`; list.appendChild(li); }); }
 
-  // get schedule rows for that day
-  const rows = getSchedulesForDay(t, dayName);
+function deleteTeacher(i){ if(!adminAccess){ alert('Admin required to delete'); return; } if(!confirm('Delete this teacher?')) return; faculty.splice(i,1); persist(); renderTableFiltered(); }
 
-  if(rows.length === 0){
-    scheduleArea.innerHTML = '<div class="small">No schedule for this teacher on that day. Use the form on the right to add rows (then select the date again to refresh).</div>';
-    return;
-  }
-
-  // build schedule display + checkboxes
-  let html = '<table><thead><tr><th></th><th>Time</th><th>Subject / Section</th><th>Room</th></tr></thead><tbody>';
-  rows.forEach((r, idx) => {
-    html += `<tr>
-      <td><input type="checkbox" class="abs-period" data-idx="${idx}" data-start="${r.start}" data-end="${r.end}" /></td>
-      <td>${r.start} - ${r.end}</td>
-      <td>${r.subject || '-'}</td>
-      <td>${r.room || '-'}</td>
-    </tr>`;
+function viewInfo(i){
+  const t = faculty[i];
+  const tbody = document.querySelector('#infoTable tbody'); tbody.innerHTML = '';
+  const fields = [
+    ['First Name', t.fname], ['Middle Name', t.mname], ['Last Name', t.lname],
+    ['Position', t.position], ['Employee Number', t.empno], ['Sex', t.sex],
+    ['Age', t.age], ['Address', t.address], ['Contact Number', t.contact],
+    ['Email', t.email], ['Specialization', t.special]
+  ];
+  fields.forEach(f=>{
+    const tr = document.createElement('tr'); tr.innerHTML = `<th style="width:35%;background:#fafafa">${f[0]}</th><td>${f[1]||''}</td>`; tbody.appendChild(tr);
   });
-  html += '</tbody></table>';
-  scheduleArea.innerHTML = html;
-
-  // attach event listeners to checkboxes to show substitute pickers
-  Array.from(document.querySelectorAll('.abs-period')).forEach(cb => {
-    cb.addEventListener('change', onPeriodChecked);
-  });
-
-  // Clear periodList
-  periodList.innerHTML = '';
+  document.getElementById('infoModal').style.display='block';
 }
+function closeInfoModal(){ document.getElementById('infoModal').style.display='none'; }
 
-/* When admin adds manual schedule row for selected teacher */
-function addManualSchedule(){
-  const emp = absentSelect.value;
-  if(!emp){ alert('Select a teacher first (left).'); return; }
-  const t = getTeacher(emp);
-  if(!t){ alert('Teacher not found'); return; }
-
-  const dayRaw = document.getElementById('ns_day').value.trim().toUpperCase();
-  const timeRaw = document.getElementById('ns_time').value.trim();
-  const subj = (document.getElementById('ns_subject').value || '').trim();
-  if(!dayRaw || !timeRaw || !subj){ alert('Please provide DAY, time range, and subject/section.'); return; }
-  // time format validation: start-end
-  const parts = timeRaw.split('-').map(s=>s.trim());
-  if(parts.length !== 2){
-    alert('Time range must be like 08:00-09:00 (24h).');
-    return;
-  }
-  const [start, end] = parts;
-  if(start >= end){ alert('Start must be before end.'); return; }
-
-  // ensure teacher.schedules exists
-  if(!t.schedules) t.schedules = [];
-  t.schedules.push({ day: dayRaw.toUpperCase(), start, end, subject: subj.toUpperCase(), room: '' });
-
-  // persist back to localStorage
-  const idx = faculty.findIndex(f => f.empno === t.empno);
-  if(idx >= 0){
-    faculty[idx] = t;
-    localStorage.setItem(FAC_KEY, JSON.stringify(faculty));
-    alert('Schedule row added and saved to teacher record.');
-    // refresh display for selected date
-    renderSelectedTeacherSchedule();
-    // clear inputs
-    document.getElementById('ns_day').value = '';
-    document.getElementById('ns_time').value = '';
-    document.getElementById('ns_subject').value = '';
-  } else {
-    alert('Error: could not save schedule.');
-  }
-}
-
-/* When a period checkbox is checked, show a row in periodList with substitute selector */
-function onPeriodChecked(e){
-  const cb = e.target;
-  const idx = cb.dataset.idx;
-  const start = cb.dataset.start;
-  const end = cb.dataset.end;
-  const emp = absentSelect.value;
-  const dateVal = absentDate.value;
-  const d = new Date(dateVal);
-  const days = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
-  const dayName = days[d.getDay()];
-
-  // create an id for this slot
-  const slotId = `slot-${idx}-${start.replace(':','')}-${end.replace(':','')}`;
-
-  if(cb.checked){
-    // create container row with substitute dropdown
-    const wrapper = document.createElement('div');
-    wrapper.id = slotId;
-    wrapper.style.marginTop = '8px';
-    wrapper.className = 'muted';
-    wrapper.innerHTML = `<div style="display:grid;grid-template-columns:1fr 2fr 2fr;gap:8px;align-items:center">
-      <div><strong>${dayName} ${start}-${end}</strong></div>
-      <div><div class="small">Subject / Section:</div><div id="${slotId}-sub" class="small"></div></div>
-      <div>
-        <label class="small">Assign substitute</label>
-        <select id="${slotId}-assign" class="assign-select"><option value="">Loading...</option></select>
-      </div>
-    </div>`;
-    periodList.appendChild(wrapper);
-
-    // show subject of the slot pulled from teacher schedule
-    const t = getTeacher(emp);
-    const rows = getSchedulesForDay(t, dayName);
-    const s = rows[idx];
-    if(s) document.getElementById(`${slotId}-sub`).innerText = s.subject || '-';
-
-    // populate available teachers for this time slot
-    populateAvailableTeachersForSlot(slotId, dayName, start, end, emp);
-  } else {
-    // remove the wrapper and clear any selection stored
-    const el = document.getElementById(slotId);
-    if(el) el.remove();
-  }
-}
-
-/* Determine availability: teacher is available if they have no schedule overlapping the start-end on that day */
+/* Vacant detection helpers */
+function getCurrentDayTime(){ const now=new Date(); const days=['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY']; const day=days[now.getDay()]; const hh=String(now.getHours()).padStart(2,'0'); const mm=String(now.getMinutes()).padStart(2,'0'); const time=`${hh}:${mm}`; return {day,time}; }
 function intervalsOverlap(startA, endA, startB, endB){ return (startA < endB) && (startB < endA); }
+function getVacantAt(day, timeOrRange){ const result=[]; faculty.forEach(t=>{ const schedulesToday = (t.schedules||[]).filter(s => s.day === day); if(schedulesToday.length === 0){ result.push({t,reason:'No schedule on ' + day}); return; } let busy=false; if(timeOrRange.type==='point'){ busy = schedulesToday.some(s => (timeOrRange.time >= s.start && timeOrRange.time < s.end)); } else { busy = schedulesToday.some(s => intervalsOverlap(s.start, s.end, timeOrRange.start, timeOrRange.end)); } if(!busy) result.push({t,reason: timeOrRange.type==='point' ? `Free at ${timeOrRange.time}` : `Free during ${timeOrRange.start}-${timeOrRange.end}`}); }); return result; }
 
-function teacherIsBusyDuring(t, dayName, start, end){
-  if(!t || !t.schedules) return false;
-  const rows = t.schedules.filter(s => (s.day||'').toUpperCase() === dayName.toUpperCase());
-  return rows.some(r => intervalsOverlap(r.start, r.end, start, end));
-}
+/* Vacant Now */
+function openVacantModal(){ const list=document.getElementById('vacantListNow'); list.innerHTML=''; const ct=getCurrentDayTime(); const vacants=getVacantAt(ct.day, {type:'point', time:ct.time}); if(vacants.length===0) list.innerHTML='<div class="small">No vacant teachers at this time.</div>'; vacants.forEach(v=>{ const div=document.createElement('div'); div.className='schedule-item'; div.innerHTML=`<div><strong>${v.t.fname} ${v.t.lname}</strong><br><small>${v.t.position} • ${v.t.empno}</small><div class="small">${v.reason}</div></div><div><button onclick="openTeacherFromEmp('${v.t.empno}')">View</button></div>`; list.appendChild(div); }); document.getElementById('vacantModal').style.display='block'; }
+function closeVacantModal(){ document.getElementById('vacantModal').style.display='none'; }
+function openVacantChecker(){ document.getElementById('checker_day').value=''; document.getElementById('checker_time').value=''; document.getElementById('vacantCheckerResult').innerHTML=''; document.getElementById('vacantCheckerModal').style.display='block'; }
+function closeVacantChecker(){ document.getElementById('vacantCheckerModal').style.display='none'; }
+function runVacantChecker(){ const day=(document.getElementById('checker_day').value||'').trim().toUpperCase(); const time=(document.getElementById('checker_time').value||'').trim(); if(!day||!time){ alert('Please select day and time.'); return; } const listEl=document.getElementById('vacantCheckerResult'); listEl.innerHTML=''; const vacants=getVacantAt(day,{type:'point', time}); if(vacants.length===0) listEl.innerHTML='<div class="small">No vacant teachers at that day/time.</div>'; vacants.forEach(v=>{ const d=document.createElement('div'); d.className='schedule-item'; d.innerHTML=`<div><strong>${v.t.fname} ${v.t.lname}</strong><br><small>${v.t.position} • ${v.t.empno}</small><div class="small">${v.reason}</div></div><div><button onclick="openTeacherFromEmp('${v.t.empno}')">View</button></div>`; listEl.appendChild(d); }); }
 
-/* Populate substitute dropdown excluding the absent teacher and those busy */
-function populateAvailableTeachersForSlot(slotId, dayName, start, end, absentEmpno){
-  const sel = document.getElementById(`${slotId}-assign`);
-  sel.innerHTML = '<option value="">-- Select substitute --</option>';
-  // refresh faculty from storage
-  faculty = JSON.parse(localStorage.getItem(FAC_KEY) || '[]');
-  faculty.forEach(t => {
-    if(t.empno === absentEmpno) return; // skip absent
-    // teacher considered available if they are NOT busy during the slot
-    if(!teacherIsBusyDuring(t, dayName, start, end)){
-      const opt = document.createElement('option');
-      opt.value = t.empno;
-      opt.text = `${t.fname} ${t.lname} — ${t.position || ''} (${t.empno})`;
-      sel.appendChild(opt);
-    }
-  });
+/* Schedules list modal */
+function openSchedulesModal(){ const el=document.getElementById('allSchedules'); el.innerHTML=''; if(faculty.length===0){ el.innerHTML='<div class="small">No teachers yet.</div>'; document.getElementById('schedulesModal').style.display='block'; return; } faculty.forEach(t=>{ const d=document.createElement('div'); d.className='schedule-item'; const schedText=(t.schedules||[]).map(s=> `${s.day} ${s.start}-${s.end} • ${s.subject} • ${s.room}`).join('<br>'); d.innerHTML=`<div><strong>${t.fname} ${t.lname}</strong><br><small>${t.position} • ${t.empno}</small><div class="small" style="margin-top:6px">${schedText || 'No schedule'}</div></div><div><button onclick="openTeacherFromEmp('${t.empno}')">View</button></div>`; el.appendChild(d); }); document.getElementById('schedulesModal').style.display='block'; }
+function closeSchedulesModal(){ document.getElementById('schedulesModal').style.display='none'; }
+function openTeacherFromEmp(empno){ const idx=faculty.findIndex(x=> x.empno===empno); if(idx>=0) viewInfo(idx); }
 
-  // if no available teachers
-  if(sel.options.length === 1){
-    sel.innerHTML = '<option value="">No available teachers</option>';
-  }
-}
+/* Contingency features */
+function openContingencyModal(){ if(!adminAccess){ alert('Admin required to create contingency plans.'); return; } document.getElementById('cont_absent').innerHTML = '<option value="">Select Absent Teacher</option>'; faculty.forEach((t,i)=>{ const opt=document.createElement('option'); opt.value=t.empno; opt.text=`${t.fname} ${t.lname} — ${t.empno}`; document.getElementById('cont_absent').appendChild(opt); }); document.getElementById('contCandidates').innerHTML=''; document.getElementById('cont_date').value=''; document.getElementById('cont_start').value=''; document.getElementById('cont_end').value=''; document.getElementById('cont_subject').value=''; document.getElementById('cont_room').value=''; document.getElementById('contModal').style.display='block'; }
+function closeContingencyModal(){ document.getElementById('contModal').style.display='none'; }
 
-/* Generate and save plan: iterate through selected period rows and save assignments */
-function generatePlan(){
-  const emp = absentSelect.value;
-  const dateVal = absentDate.value;
-  if(!emp || !dateVal){ alert('Select absent teacher and date first.'); return; }
-  const d = new Date(dateVal);
+function findSubstitutes(){
+  const absentEmp = document.getElementById('cont_absent').value;
+  const date = document.getElementById('cont_date').value;
+  const start = document.getElementById('cont_start').value;
+  const end = document.getElementById('cont_end').value;
+  const subject = (document.getElementById('cont_subject').value||'').trim().toUpperCase();
+  const room = (document.getElementById('cont_room').value||'').trim().toUpperCase();
+  if(!absentEmp || !date || !start || !end || !subject || !room){ alert('Please complete all contingency fields.'); return; }
+  if(start >= end){ alert('Start time must be before end time.'); return; }
+
+  const d = new Date(date);
   const days = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
-  const dayName = days[d.getDay()];
+  const day = days[d.getDay()];
 
-  // collect all slot wrappers
-  const wrappers = Array.from(periodList.children).filter(ch => ch.id && ch.id.startsWith('slot-'));
-  if(wrappers.length === 0){ alert('No periods selected. Please check periods for absence.'); return; }
-
-  const plans = [];
-  for(const w of wrappers){
-    const slotId = w.id;
-    const assignSel = document.getElementById(`${slotId}-assign`);
-    const subEmp = assignSel ? assignSel.value : '';
-    const subjEl = document.getElementById(`${slotId}-sub`);
-    const subjectText = subjEl ? subjEl.innerText : '';
-    // parse times from slot id (we can also read label)
-    const label = w.querySelector('div strong') ? w.querySelector('div strong').innerText : '';
-    const match = label.match(/([0-9]{2}:[0-9]{2})-([0-9]{2}:[0-9]{2})/);
-    const start = match ? match[1] : '';
-    const end = match ? match[2] : '';
-
-    if(!subEmp){ if(!confirm(`Period ${label} has no substitute assigned. Continue and save others?`)) return; }
-
-    plans.push({
-      id: Date.now() + Math.floor(Math.random()*1000),
-      absentEmp: emp,
-      absentName: (getTeacher(emp) ? `${getTeacher(emp).fname} ${getTeacher(emp).lname}` : emp),
-      subEmp: subEmp || null,
-      subName: subEmp ? (getTeacher(subEmp) ? `${getTeacher(subEmp).fname} ${getTeacher(subEmp).lname}` : subEmp) : null,
-      subject: subjectText || '',
-      date: dateVal,
-      day: dayName,
-      start, end,
-      created: new Date().toISOString()
-    });
-  }
-
-  // persist plans into contingency storage (append)
-  contingency = JSON.parse(localStorage.getItem(CONT_KEY) || '[]');
-  contingency = plans.concat(contingency); // newest first
-  localStorage.setItem(CONT_KEY, JSON.stringify(contingency));
-
-  // show preview
-  renderPlanPreview(plans);
-  alert('Contingency plan saved.');
-  // clear selection and UI for next round
-  periodList.innerHTML = '';
-  scheduleArea.innerHTML = '<div class="small">Select both teacher and date to view schedule.</div>';
-  absentSelect.value = '';
-  absentDate.value = '';
-}
-
-/* Show a simple preview of saved plans */
-function renderPlanPreview(plans){
-  if(!plans || plans.length === 0){ planPreview.innerHTML = '<div class="small">No plan generated yet.</div>'; return; }
-  let html = '<table><thead><tr><th>#</th><th>Absent</th><th>Substitute</th><th>Subject</th><th>Date</th><th>Time</th></tr></thead><tbody>';
-  plans.forEach((p,i) => {
-    html += `<tr><td>${i+1}</td><td>${p.absentName}</td><td>${p.subName || '<em>Unassigned</em>'}</td><td>${p.subject}</td><td>${p.date}</td><td>${p.start}-${p.end}</td></tr>`;
+  const candidates = getVacantAt(day, {type:'range', start, end}).filter(v=> v.t.empno !== absentEmp );
+  const container = document.getElementById('contCandidates'); container.innerHTML = '';
+  if(candidates.length===0){ container.innerHTML = '<div class="small">No available substitutes for that day/time.</div>'; return; }
+  candidates.forEach(v=>{
+    const el = document.createElement('div'); el.className='schedule-item';
+    el.innerHTML = `<div><strong>${v.t.fname} ${v.t.lname}</strong><br><small>${v.t.position} • ${v.t.empno}</small><div class="small">${v.reason}</div></div>
+      <div><button onclick="assignSubstitute('${absentEmp}','${v.t.empno}','${date}','${start}','${end}','${subject}','${room}')">Assign</button></div>`;
+    container.appendChild(el);
   });
-  html += '</tbody></table>';
-  planPreview.innerHTML = html;
 }
 
-/* Export contingency CSV (same format as dashboard) */
+function assignSubstitute(absentEmp, subEmp, date, start, end, subject, room){
+  const absent = faculty.find(f=> f.empno === absentEmp);
+  const sub = faculty.find(f=> f.empno === subEmp);
+  if(!absent || !sub){ alert('Teacher not found'); return; }
+  const plan = {
+    id: Date.now(),
+    absentEmp, absentName:`${absent.fname} ${absent.lname}`,
+    subEmp, subName:`${sub.fname} ${sub.lname}`,
+    subject, room, date, start, end,
+    created: new Date().toISOString()
+  };
+  contingency.unshift(plan);
+  persistCont();
+  renderContTable();
+  alert(`Assigned ${plan.subName} as substitute for ${plan.absentName} on ${plan.date} ${plan.start}-${plan.end}`);
+  document.getElementById('contCandidates').innerHTML = '';
+}
+
+/* Contingency list rendering */
+function openContingencyList(){ renderContTable(); document.getElementById('contListModal').style.display='block'; }
+function closeContingencyList(){ document.getElementById('contListModal').style.display='none'; }
+function renderContTable(){
+  const tbody = document.querySelector('#contTable tbody'); if(!tbody) return;
+  tbody.innerHTML = '';
+  contingency.slice(0,10).forEach((c,i)=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${i+1}</td><td>${c.absentName}</td><td>${c.subName}</td><td>${c.subject}</td><td>${c.room}</td><td>${c.date}</td><td>${c.start}-${c.end}</td>`; tbody.appendChild(tr); });
+  const list = document.getElementById('contList'); if(list) { list.innerHTML=''; if(contingency.length===0) list.innerHTML='<div class="small">No contingency plans saved.</div>'; contingency.forEach((c,idx)=>{ const el=document.createElement('div'); el.className='schedule-item'; el.innerHTML = `<div><strong>${c.absentName}</strong><br><small>Sub: ${c.subName} • ${c.date} ${c.start}-${c.end}</small><div class="small">Subject: ${c.subject} • Room: ${c.room}</div></div><div><button onclick="removeContingency(${idx})">Delete</button></div>`; list.appendChild(el); }); }
+}
+function removeContingency(idx){ if(!adminAccess){ alert('Admin required'); return;} if(!confirm('Delete this contingency plan?')) return; contingency.splice(idx,1); persistCont(); renderContTable(); }
+
 function exportContingencyCSV(){
-  const arr = JSON.parse(localStorage.getItem(CONT_KEY) || '[]');
-  if(arr.length === 0){ alert('No contingency plans saved.'); return; }
-  const rows=[['#','ABSENT_NAME','ABSENT_EMP','SUB_NAME','SUB_EMP','SUBJECT','DATE','START','END','CREATED']];
-  arr.forEach((c,i)=> rows.push([i+1,c.absentName,c.absentEmp,c.subName||'',c.subEmp||'',c.subject,c.date,c.start,c.end,c.created]));
-  const csv = rows.map(r=> r.map(x=> `"${String(x||'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  if(contingency.length===0){ alert('No contingency plans'); return; }
+  const rows=[['#','ABSENT_NAME','ABSENT_EMP','SUB_NAME','SUB_EMP','SUBJECT','ROOM','DATE','START','END','CREATED']];
+  contingency.forEach((c,i)=> rows.push([i+1,c.absentName,c.absentEmp,c.subName,c.subEmp,c.subject,c.room,c.date,c.start,c.end,c.created]));
+  const csv = rows.map(r=> r.map(c=> `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
   const blob = new Blob(['\ufeff', csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`contingency_plans_${new Date().toISOString().split('T')[0]}.csv`; a.click(); URL.revokeObjectURL(url);
 }
 
-/* initial */
-loadFaculty();
+/* Export faculty CSV */
+function exportCSV(){ if(faculty.length===0){ alert('No data to export'); return; } const rows=[]; const header=['#','FIRST','MIDDLE','LAST','POSITION','EMP_NO','SEX','AGE','ADDRESS','CONTACT','EMAIL','SPECIAL','SCHEDULES_JSON']; rows.push(header); faculty.forEach((t,i)=>{ const schedulesJson = JSON.stringify(t.schedules || []); rows.push([i+1,t.fname,t.mname,t.lname,t.position,t.empno,t.sex,t.age,t.address,t.contact,t.email,t.special,schedulesJson]); }); const csv = rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\r\n'); const blob = new Blob(['\ufeff', csv], {type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`faculty_data_${new Date().toISOString().split('T')[0]}.csv`; a.click(); URL.revokeObjectURL(url); }
+
+/* utility open/close modal behaviors */
+document.querySelectorAll('.modal').forEach(m=> m.addEventListener('click', e=> { if(e.target === m) m.style.display='none'; }));
+document.addEventListener('keydown', e=> { if(e.key === 'Escape') document.querySelectorAll('.modal').forEach(m=> m.style.display='none'); });
+
+/* Clear all data (admin only) */
+function clearAllData(){ if(!adminAccess){ alert('Admin required'); return; } if(!confirm('Erase ALL saved data? This cannot be undone.')) return; faculty=[]; contingency=[]; persist(); persistCont(); renderTableFiltered(); }
+
+/* Helper to populate contingency absent dropdown */
+function populateContDropdown(){
+  const sel = document.getElementById('cont_absent');
+  if(!sel) return;
+  const current = sel.value || '';
+  sel.innerHTML = '<option value="">Select Absent Teacher</option>';
+  faculty.forEach(t=>{ const opt=document.createElement('option'); opt.value=t.empno; opt.text=`${t.fname} ${t.lname} — ${t.empno}`; sel.appendChild(opt); });
+  sel.value = current;
+}
+
+/* initial render */
+renderTableFiltered();
+if(!localStorage.getItem(STORAGE_KEY)) persist();
+if(!localStorage.getItem(CONT_KEY)) persistCont();
 </script>
 </body>
 </html>
