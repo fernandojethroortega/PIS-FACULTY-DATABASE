@@ -22,6 +22,7 @@
     text-align: center;
   }
 
+  /* Header Title */
   header {
     padding: 15px;
     background: linear-gradient(90deg, var(--blue), var(--gold));
@@ -36,11 +37,11 @@
   /* School Logo */
   .school-logo-container {
     text-align: center;
-    margin-top: 25px;
+    margin-top: 20px;
   }
 
   .school-logo {
-    width: 150px;
+    width: 160px;
     height: auto;
     border-radius: 50%;
     box-shadow: 0 0 25px var(--gold);
@@ -52,10 +53,10 @@
     box-shadow: 0 0 35px var(--blue), 0 0 45px var(--gold);
   }
 
-  /* Clock */
+  /* Date and Time */
   #datetime {
     font-size: 1rem;
-    margin-top: 10px;
+    margin-top: 8px;
     color: var(--gold);
     text-shadow: 0 0 10px var(--blue);
   }
@@ -158,9 +159,6 @@
 </head>
 <body>
 
-<!-- Header -->
-<header>Pagudpud Integrated School - Faculty Dashboard</header>
-
 <!-- School Logo -->
 <div class="school-logo-container">
   <img src="PIS OFFICIAL SEAL.png" alt="Pagudpud Integrated School Logo" class="school-logo">
@@ -168,6 +166,9 @@
 
 <!-- Date & Time -->
 <div id="datetime"></div>
+
+<!-- Header -->
+<header>Pagudpud Integrated School - Faculty Dashboard</header>
 
 <!-- Main Container -->
 <div class="container">
@@ -270,5 +271,6 @@
     displayTeachers();
   }
 </script>
+
 </body>
 </html>
