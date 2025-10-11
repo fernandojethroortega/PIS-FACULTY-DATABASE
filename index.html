@@ -12,7 +12,7 @@
   .brand img{width:72px;height:72px;border-radius:50%;object-fit:contain}
   .brand h1{font-size:18px;margin:0}
   .header-center{flex:1;text-align:center}
-  .header-center .clock{font-weight:600;color:var(--blue);font-size:14px}
+  .header-center .clock{font-weight:700;color:var(--blue);font-size:14px}
   .header-center .clock small{display:block;font-size:12px;color:#123}
   .header-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}
   .icon-btn{background:transparent;border:1px solid rgba(13,59,102,0.15);padding:8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px}
@@ -85,7 +85,7 @@
 
   <div class="header-center">
     <div class="clock" id="headerClock">--</div>
-    <small style="color:var(--blue); font-weight:500" id="headerClockSub"></small>
+    <small id="headerClockSub"></small>
   </div>
 
   <div class="header-actions">
@@ -151,7 +151,26 @@
       <div><label>First Name *</label><input id="t_first" type="text" placeholder="FIRST NAME"></div>
       <div><label>Middle Name *</label><input id="t_middle" type="text" placeholder="MIDDLE NAME"></div>
       <div><label>Last Name *</label><input id="t_last" type="text" placeholder="LAST NAME"></div>
-      <div><label>Position *</label><input id="t_position" type="text" placeholder="POSITION"></div>
+
+      <!-- Position dropdown (replaced input with select) -->
+      <div>
+        <label>Position *</label>
+        <select id="t_position">
+          <option value="">Select Position</option>
+          <option>TEACHER I</option>
+          <option>TEACHER II</option>
+          <option>TEACHER III</option>
+          <option>TEACHER IV</option>
+          <option>TEACHER V</option>
+          <option>TEACHER VI</option>
+          <option>TEACHER VII</option>
+          <option>MASTER TEACHER I</option>
+          <option>MASTER TEACHER II</option>
+          <option>MASTER TEACHER III</option>
+          <option>MASTER TEACHER IV</option>
+        </select>
+      </div>
+
       <div><label>Employee Number *</label><input id="t_empno" type="text" placeholder="EMPLOYEE NUMBER"></div>
       <div><label>Sex *</label><select id="t_sex"><option value="">Select</option><option>MALE</option><option>FEMALE</option></select></div>
       <div><label>Age *</label><input id="t_age" type="number" min="18" placeholder="AGE"></div>
@@ -277,18 +296,9 @@
 
 <script>
 /* ============================
-  Cleaned system:
-  - Weekly Schedule feature removed (HTML, button, JS)
-  - Real-time header clock added (#headerClock, #headerClockSub)
-  - Footer added ("All Rights Reserved")
-  - Rest of features preserved:
-    - faculty add/edit/delete/view
-    - schedules per teacher (list)
-    - vacant checker
-    - contingency plan generator
-    - view complete teacher info (table)
-    - persistence via localStorage
-    - admin access for edits (ADMIN123)
+  Cleaned system with Position dropdown + full-format clock
+  - Weekly Schedule feature removed
+  - Clock shows full date & time (local)
 =============================*/
 
 const STORAGE_KEY = 'pis_faculty_v_final';
@@ -308,20 +318,23 @@ document.addEventListener('input', e=>{
   if(!el) return;
   if(el.tagName==='INPUT' || el.tagName==='TEXTAREA' || el.tagName==='SELECT'){
     if(el.type === 'email' || el.type === 'time' || el.type === 'number' || el.type === 'date') return;
+    // For selects, options are already uppercase; but keep this safe:
+    if(el.tagName === 'SELECT') return;
     el.value = el.value.toUpperCase();
   }
 });
 
-/* Header clock (real-time) */
+/* Header clock (real-time) - full format */
 function updateClock(){
   const now = new Date();
-  // Format date: Weekday, Month Day, Year
   const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const timeOptions = { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true };
-  const dateStr = now.toLocaleDateString(undefined, dateOptions);
-  const timeStr = now.toLocaleTimeString(undefined, timeOptions);
-  document.getElementById('headerClock').innerText = timeStr;
-  document.getElementById('headerClockSub').innerText = dateStr;
+  const dateStr = now.toLocaleDateString(undefined, dateOptions); // e.g., Saturday, October 11, 2025
+  const timeStr = now.toLocaleTimeString(undefined, timeOptions); // e.g., 11:45:30 AM
+  document.getElementById('headerClock').innerText = `${dateStr} — ${timeStr}`;
+  // show timezone below (if available)
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  document.getElementById('headerClockSub').innerText = tz ? `Time zone: ${tz}` : '';
 }
 updateClock();
 setInterval(updateClock, 1000);
