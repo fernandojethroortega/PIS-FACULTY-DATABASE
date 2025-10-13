@@ -3,11 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Faculty Management System</title>
-
-<!-- Load SheetJS for Google Sheet CSV reading -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
+<title>Pagudpud Integrated School - Faculty Dashboard</title>
 <style>
   :root {
     --blue: #0d3b66;
@@ -30,96 +26,57 @@
   }
   #clock {
     position: absolute;
-    top: 8px;
+    top: 5px;
     left: 15px;
     font-size: 0.9rem;
   }
   main {
     padding: 20px;
   }
-  .search-bar {
-    margin-bottom: 20px;
-    text-align: center;
-  }
-  input[type="text"] {
-    padding: 10px;
-    width: 300px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-  }
-
-  /* Card Layout */
-  .teacher-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
-  }
   .teacher-card {
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
     padding: 15px;
-    transition: transform 0.2s ease;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
   }
-  .teacher-card:hover {
-    transform: translateY(-3px);
+  .teacher-photo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #ddd;
+    overflow: hidden;
+    object-fit: cover;
+  }
+  .teacher-info {
+    flex: 1;
   }
   .teacher-name {
     font-weight: bold;
-    color: var(--blue);
     font-size: 1.1rem;
+    color: var(--blue);
   }
-  .teacher-info {
+  .teacher-details {
     font-size: 0.9rem;
-    color: #333;
-    margin-top: 5px;
+    color: #444;
   }
-  button {
+  .upload-btn {
     background-color: var(--blue);
     color: white;
     border: none;
+    padding: 6px 10px;
     border-radius: 6px;
-    padding: 6px 12px;
-    margin-top: 10px;
     cursor: pointer;
   }
-  button:hover {
+  .upload-btn:hover {
     background-color: var(--gold);
     color: var(--blue);
   }
-
-  /* Modal */
-  .modal {
+  input[type="file"] {
     display: none;
-    position: fixed;
-    z-index: 10;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-  }
-  .modal-content {
-    background: white;
-    margin: 8% auto;
-    padding: 20px;
-    border-radius: 10px;
-    width: 400px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  }
-  .close {
-    color: red;
-    float: right;
-    font-size: 1.3rem;
-    cursor: pointer;
-  }
-  .close:hover {
-    color: darkred;
-  }
-  h3 {
-    color: var(--blue);
-    border-bottom: 2px solid var(--gold);
-    padding-bottom: 5px;
   }
 </style>
 </head>
@@ -127,36 +84,15 @@
 
 <header>
   <div id="clock"></div>
-  Faculty Management System
+  Pagudpud Integrated School - Faculty Dashboard
 </header>
 
 <main>
-  <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="Search teacher..." onkeyup="searchTeacher()">
-  </div>
-
-  <div id="teacherContainer" class="teacher-grid"></div>
+  <div id="teacherContainer">Loading teacher data...</div>
 </main>
 
-<!-- View Modal -->
-<div id="viewModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <h3>Teacher Information</h3>
-    <p><strong>Full Name:</strong> <span id="vFullName"></span></p>
-    <p><strong>Position:</strong> <span id="vPosition"></span></p>
-    <p><strong>Employee No.:</strong> <span id="vEmpNo"></span></p>
-    <p><strong>Sex:</strong> <span id="vSex"></span></p>
-    <p><strong>Age:</strong> <span id="vAge"></span></p>
-    <p><strong>Address:</strong> <span id="vAddress"></span></p>
-    <p><strong>Specialization:</strong> <span id="vSpec"></span></p>
-    <p><strong>Email:</strong> <span id="vEmail"></span></p>
-    <p><strong>Contact No.:</strong> <span id="vContact"></span></p>
-  </div>
-</div>
-
 <script>
-/* CLOCK */
+// Clock Display
 function updateClock() {
   const now = new Date();
   document.getElementById('clock').textContent = now.toLocaleTimeString();
@@ -164,93 +100,31 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-let teacherData = [];
+// Fetch from Google Sheets
+const sheetURL = "https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/gviz/tq?tqx=out:json";
 
-/* LOAD DATA FROM GOOGLE SHEET */
-async function loadTeacherData() {
-  const fileUrl = "https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/export?format=csv";
-
+async function fetchTeacherData() {
   try {
-    const response = await fetch(fileUrl);
-    const csvData = await response.text();
-    const workbook = XLSX.read(csvData, { type: "string" });
-    const sheetName = workbook.SheetNames[0];
-    const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    teacherData = data;
-    renderCards(data);
+    const res = await fetch(sheetURL);
+    const text = await res.text();
+    const json = JSON.parse(text.substr(47).slice(0, -2));
+    const rows = json.table.rows;
+
+    const teachers = rows.map(row => ({
+      firstName: row.c[0]?.v || "",
+      middleName: row.c[1]?.v || "",
+      lastName: row.c[2]?.v || "",
+      position: row.c[3]?.v || "",
+      empNumber: row.c[4]?.v || "",
+      sex: row.c[5]?.v || "",
+      age: row.c[6]?.v || "",
+      address: row.c[7]?.v || "",
+      specialization: row.c[8]?.v || "",
+      email: row.c[9]?.v || "",
+      contact: row.c[10]?.v || "",
+      photo: localStorage.getItem(row.c[4]?.v || "") // Load stored photo
+    }));
+
+    renderTeachers(teachers);
   } catch (error) {
-    alert("Could not load teacher data. Please check your Google Sheet link.");
-    console.error(error);
-  }
-}
-
-/* RENDER TEACHER CARDS */
-function renderCards(list) {
-  const container = document.getElementById("teacherContainer");
-  container.innerHTML = "";
-  list.forEach((row, index) => {
-    const r = {};
-    for (let key in row) {
-      r[key.trim().toLowerCase()] = row[key];
-    }
-
-    const middleInitial = r["middle name"] ? r["middle name"].charAt(0).toUpperCase() + "." : "";
-    const fullName = `${r["first name"] || ""} ${middleInitial} ${r["last name"] || ""}`.trim();
-
-    const card = document.createElement("div");
-    card.classList.add("teacher-card");
-    card.innerHTML = `
-      <div class="teacher-name">${fullName}</div>
-      <div class="teacher-info">
-        <div>${r["position"] || ""}</div>
-        <div style="font-size:0.85rem; color:#555;">${r["email"] || ""}</div>
-        <div style="font-size:0.85rem; color:#555;">${r["contact number"] || ""}</div>
-      </div>
-      <button onclick="viewTeacher(${index})">View</button>
-    `;
-    container.appendChild(card);
-  });
-}
-
-/* VIEW TEACHER DETAILS */
-function viewTeacher(index) {
-  const t = teacherData[index];
-  const r = {};
-  for (let key in t) {
-    r[key.trim().toLowerCase()] = t[key];
-  }
-  const middleInitial = r["middle name"] ? r["middle name"].charAt(0).toUpperCase() + "." : "";
-  document.getElementById('vFullName').textContent = `${r["first name"] || ""} ${middleInitial} ${r["last name"] || ""}`;
-  document.getElementById('vPosition').textContent = r["position"] || "";
-  document.getElementById('vEmpNo').textContent = r["employee number"] || "";
-  document.getElementById('vSex').textContent = r["sex"] || "";
-  document.getElementById('vAge').textContent = r["age"] || "";
-  document.getElementById('vAddress').textContent = r["address"] || "";
-  document.getElementById('vSpec').textContent = r["specialization"] || "";
-  document.getElementById('vEmail').textContent = r["email"] || "";
-  document.getElementById('vContact').textContent = r["contact number"] || "";
-  document.getElementById('viewModal').style.display = 'block';
-}
-
-/* CLOSE MODAL */
-function closeModal() {
-  document.getElementById('viewModal').style.display = 'none';
-}
-
-/* SEARCH FUNCTION */
-function searchTeacher() {
-  const query = document.getElementById('searchInput').value.toLowerCase();
-  const filtered = teacherData.filter(t => {
-    const values = Object.values(t).join(" ").toLowerCase();
-    return values.includes(query);
-  });
-  renderCards(filtered);
-}
-
-loadTeacherData();
-</script>
-
-</body>
-</html>
-
-
+    document.getElementBy
