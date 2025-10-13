@@ -33,7 +33,7 @@
     color:white;
     padding:10px 20px;
     text-align:center;
-    margin-top:30px; /* to make room for the clock above */
+    margin-top:30px;
   }
 
   h1 { margin:0; font-size:1.5rem; }
@@ -73,11 +73,11 @@
   }
   .modal-content {
     background:#fff;
-    margin:10% auto;
+    margin:3% auto;
     padding:20px;
     border-radius:10px;
     width:90%;
-    max-width:600px;
+    max-width:650px;
   }
   .close {
     color:#aaa;
@@ -86,6 +86,14 @@
     font-weight:bold;
   }
   .close:hover { color:black; cursor:pointer; }
+
+  input, select {
+    width:100%;
+    padding:6px;
+    margin:5px 0;
+    border:1px solid #ccc;
+    border-radius:5px;
+  }
 
   .schedule-item {
     border:1px solid #ccc;
@@ -118,8 +126,8 @@
       <tr>
         <th>Name</th>
         <th>Position</th>
-        <th>Advisory</th>
-        <th>Subject</th>
+        <th>Specialization</th>
+        <th>Contact</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -136,15 +144,47 @@
   </div>
 </div>
 
-<!-- Vacant Modal -->
+<!-- Add Teacher Modal -->
 <div id="vacantModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeVacantModal()">&times;</span>
     <h3>Add Teacher</h3>
-    <input type="text" id="name" placeholder="Full Name" style="width:100%;margin:5px 0;"><br>
-    <input type="text" id="position" placeholder="Position" style="width:100%;margin:5px 0;"><br>
-    <input type="text" id="advisory" placeholder="Advisory Class" style="width:100%;margin:5px 0;"><br>
-    <input type="text" id="subject" placeholder="Subject" style="width:100%;margin:5px 0;"><br>
+
+    <input type="text" id="empNum" placeholder="Employee Number">
+    <input type="text" id="firstName" placeholder="First Name">
+    <input type="text" id="middleName" placeholder="Middle Name">
+    <input type="text" id="lastName" placeholder="Last Name">
+    <input type="number" id="age" placeholder="Age">
+
+    <label>Sex:</label>
+    <select id="sex">
+      <option value="">Select Sex</option>
+      <option>Male</option>
+      <option>Female</option>
+    </select>
+
+    <input type="text" id="address" placeholder="Address">
+
+    <label>Position:</label>
+    <select id="position">
+      <option value="">Select Position</option>
+      <option>Teacher I</option>
+      <option>Teacher II</option>
+      <option>Teacher III</option>
+      <option>Teacher IV</option>
+      <option>Teacher V</option>
+      <option>Teacher VI</option>
+      <option>Teacher VII</option>
+      <option>Master Teacher I</option>
+      <option>Master Teacher II</option>
+      <option>Master Teacher III</option>
+      <option>Master Teacher IV</option>
+    </select>
+
+    <input type="text" id="specialization" placeholder="Specialization">
+    <input type="text" id="contact" placeholder="Contact Number">
+    <input type="email" id="email" placeholder="Email Address">
+
     <button onclick="addTeacher()">Save</button>
   </div>
 </div>
@@ -164,19 +204,19 @@
     <span class="close" onclick="closeContingencyModal()">&times;</span>
     <h3>Create Contingency Plan</h3>
     <label>Absent Teacher:</label><br>
-    <select id="absentTeacher" style="width:100%;margin:5px 0;"></select><br>
+    <select id="absentTeacher"></select><br>
     <label>Substitute Teacher:</label><br>
-    <select id="substituteTeacher" style="width:100%;margin:5px 0;"></select><br>
+    <select id="substituteTeacher"></select><br>
     <label>Subject:</label><br>
-    <input type="text" id="subjectCont" style="width:100%;margin:5px 0;"><br>
+    <input type="text" id="subjectCont"><br>
     <label>Room:</label><br>
-    <input type="text" id="roomCont" style="width:100%;margin:5px 0;"><br>
+    <input type="text" id="roomCont"><br>
     <label>Date:</label><br>
-    <input type="date" id="dateCont" style="width:100%;margin:5px 0;"><br>
+    <input type="date" id="dateCont"><br>
     <label>Start Time:</label><br>
-    <input type="time" id="startCont" style="width:100%;margin:5px 0;"><br>
+    <input type="time" id="startCont"><br>
     <label>End Time:</label><br>
-    <input type="time" id="endCont" style="width:100%;margin:5px 0;"><br>
+    <input type="time" id="endCont"><br>
     <button onclick="addContingency()">Save Contingency</button>
   </div>
 </div>
@@ -203,48 +243,71 @@
 let teachers = [];
 let contingency = [];
 
+/* Add Teacher Function */
 function addTeacher() {
-  const name = document.getElementById('name').value.trim();
-  const position = document.getElementById('position').value.trim();
-  const advisory = document.getElementById('advisory').value.trim();
-  const subject = document.getElementById('subject').value.trim();
-  if(!name) return alert('Please enter a name.');
+  const empNum = document.getElementById('empNum').value.trim();
+  const firstName = document.getElementById('firstName').value.trim();
+  const middleName = document.getElementById('middleName').value.trim();
+  const lastName = document.getElementById('lastName').value.trim();
+  const age = document.getElementById('age').value.trim();
+  const sex = document.getElementById('sex').value;
+  const address = document.getElementById('address').value.trim();
+  const position = document.getElementById('position').value;
+  const specialization = document.getElementById('specialization').value.trim();
+  const contact = document.getElementById('contact').value.trim();
+  const email = document.getElementById('email').value.trim().toLowerCase();
 
-  teachers.push({ name, position, advisory, subject });
+  if(!firstName || !lastName || !position) {
+    alert('Please complete the required fields (Name and Position).');
+    return;
+  }
+
+  const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`;
+
+  teachers.push({ empNum, firstName, middleName, lastName, fullName, age, sex, address, position, specialization, contact, email });
   renderTableFiltered();
   closeVacantModal();
-  document.getElementById('name').value='';
-  document.getElementById('position').value='';
-  document.getElementById('advisory').value='';
-  document.getElementById('subject').value='';
+
+  // Reset fields
+  ['empNum','firstName','middleName','lastName','age','sex','address','position','specialization','contact','email'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
 }
 
+/* Render Table */
 function renderTableFiltered() {
   const tbody = document.getElementById('facultyList');
   tbody.innerHTML = teachers.map((t, i) => `
     <tr>
-      <td>${t.name}</td>
+      <td>${t.fullName}</td>
       <td>${t.position}</td>
-      <td>${t.advisory}</td>
-      <td>${t.subject}</td>
+      <td>${t.specialization}</td>
+      <td>${t.contact}</td>
       <td><button onclick="viewTeacher(${i})">View</button></td>
     </tr>
   `).join('');
   populateContDropdown();
 }
 
+/* View Teacher Info */
 function viewTeacher(i) {
   const t = teachers[i];
   const info = `
-    <p><strong>Name:</strong> ${t.name}</p>
+    <p><strong>Employee No:</strong> ${t.empNum || '-'}</p>
+    <p><strong>Name:</strong> ${t.fullName}</p>
+    <p><strong>Age:</strong> ${t.age || '-'}</p>
+    <p><strong>Sex:</strong> ${t.sex || '-'}</p>
+    <p><strong>Address:</strong> ${t.address || '-'}</p>
     <p><strong>Position:</strong> ${t.position}</p>
-    <p><strong>Advisory:</strong> ${t.advisory}</p>
-    <p><strong>Subject:</strong> ${t.subject}</p>
+    <p><strong>Specialization:</strong> ${t.specialization || '-'}</p>
+    <p><strong>Contact:</strong> ${t.contact || '-'}</p>
+    <p><strong>Email:</strong> ${t.email || '-'}</p>
   `;
   document.getElementById('teacherInfo').innerHTML = info;
   document.getElementById('infoModal').style.display='block';
 }
 
+/* Contingency Handling */
 function addContingency(){
   const absent = document.getElementById('absentTeacher').value;
   const substitute = document.getElementById('substituteTeacher').value;
@@ -260,14 +323,15 @@ function addContingency(){
   closeContingencyModal();
 }
 
+/* Populate Dropdowns */
 function populateContDropdown(){
   const absent = document.getElementById('absentTeacher');
   const substitute = document.getElementById('substituteTeacher');
-  absent.innerHTML = teachers.map(t=>`<option>${t.name}</option>`).join('');
-  substitute.innerHTML = teachers.map(t=>`<option>${t.name}</option>`).join('');
+  absent.innerHTML = teachers.map(t=>`<option>${t.fullName}</option>`).join('');
+  substitute.innerHTML = teachers.map(t=>`<option>${t.fullName}</option>`).join('');
 }
 
-/* Clock function */
+/* Clock */
 function updateClock(){
   const now = new Date();
   let hours = now.getHours();
@@ -280,6 +344,7 @@ function updateClock(){
 setInterval(updateClock,1000);
 updateClock();
 
+/* Modal Controls */
 function openVacantModal(){ document.getElementById('vacantModal').style.display='block'; }
 function closeVacantModal(){ document.getElementById('vacantModal').style.display='none'; }
 function openSchedulesModal(){ document.getElementById('schedulesModal').style.display='block'; }
