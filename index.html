@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Pagudpud Integrated School - Faculty Dashboard</title>
 
-  <!-- Excel reading library -->
+  <!-- Load SheetJS library -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -131,7 +131,7 @@
   </table>
 </main>
 
-<!-- Modal for viewing -->
+<!-- View Modal -->
 <div id="viewModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal('viewModal')">&times;</span>
@@ -151,7 +151,7 @@
 </div>
 
 <script>
-  // clock
+  // Clock
   function updateClock() {
     const now = new Date();
     document.getElementById('clock').textContent = now.toLocaleTimeString();
@@ -162,22 +162,21 @@
   let teachers = [];
 
   async function loadTeacherData() {
-    // Here is your link, with &download=1 appended
-    const fileUrl = "https://r1deped-my.sharepoint.com/:x:/g/personal/500480_r1_deped_gov_ph/Ed7rzcRKPeBPrnhVBfL_UpMBajnWNzO2eish1INIhO57ZA?e=WPqhgX&download=1";
+    // Google Sheets CSV export link
+    const sheetId = "1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk";
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
 
     try {
-      const response = await fetch(fileUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: "array" });
-
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
+      const response = await fetch(url);
+      const csvText = await response.text();
+      const workbook = XLSX.read(csvText, { type: "string" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
       teachers = XLSX.utils.sheet_to_json(sheet);
 
       renderTable(teachers);
     } catch (error) {
-      console.error("Error loading Excel file:", error);
-      alert("Could not load the teacher data. The link might still not allow direct fetch.");
+      console.error("Error loading sheet:", error);
+      alert("Could not load the teacher data from Google Sheets.");
     }
   }
 
@@ -224,14 +223,14 @@
   function searchTeacher() {
     const query = document.getElementById('searchInput').value.toLowerCase();
     const filtered = teachers.filter(t =>
-      `${t["First Name"] || ""} ${t["Middle Name"] || ""} ${t["Last Name"] || ""}`.toLowerCase().includes(query) ||
+      (`${t["First Name"] || ""} ${t["Middle Name"] || ""} ${t["Last Name"] || ""}`).toLowerCase().includes(query) ||
       (t["Position"] || "").toLowerCase().includes(query) ||
       (t["Specialization"] || "").toLowerCase().includes(query)
     );
     renderTable(filtered);
   }
 
-  // Start loading the Excel file when page opens
+  // Start loading automatically
   loadTeacherData();
 </script>
 
