@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Pagudpud Integrated School - Faculty Dashboard</title>
 
-<!-- Load SheetJS for Excel/CSV reading -->
+<!-- Load SheetJS for Google Sheet CSV reading -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -38,7 +38,8 @@
     padding: 20px;
   }
   .search-bar {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    text-align: center;
   }
   input[type="text"] {
     padding: 10px;
@@ -46,20 +47,32 @@
     border: 1px solid #ccc;
     border-radius: 8px;
   }
-  table {
-    width: 100%;
-    border-collapse: collapse;
+
+  /* Card Layout */
+  .teacher-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+  }
+  .teacher-card {
     background: white;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    padding: 15px;
+    transition: transform 0.2s ease;
   }
-  th, td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
+  .teacher-card:hover {
+    transform: translateY(-3px);
   }
-  th {
-    background-color: var(--gold);
+  .teacher-name {
+    font-weight: bold;
     color: var(--blue);
+    font-size: 1.1rem;
+  }
+  .teacher-info {
+    font-size: 0.9rem;
+    color: #333;
+    margin-top: 5px;
   }
   button {
     background-color: var(--blue);
@@ -67,12 +80,14 @@
     border: none;
     border-radius: 6px;
     padding: 6px 12px;
+    margin-top: 10px;
     cursor: pointer;
   }
   button:hover {
     background-color: var(--gold);
     color: var(--blue);
   }
+
   /* Modal */
   .modal {
     display: none;
@@ -82,7 +97,7 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0,0,0,0.5);
   }
   .modal-content {
     background: white;
@@ -90,7 +105,7 @@
     padding: 20px;
     border-radius: 10px;
     width: 400px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
   .close {
     color: red;
@@ -120,25 +135,7 @@
     <input type="text" id="searchInput" placeholder="Search teacher..." onkeyup="searchTeacher()">
   </div>
 
-  <table id="teacherTable">
-    <thead>
-      <tr>
-        <th>First Name</th>
-        <th>Middle Name</th>
-        <th>Last Name</th>
-        <th>Position</th>
-        <th>Employee No.</th>
-        <th>Sex</th>
-        <th>Age</th>
-        <th>Address</th>
-        <th>Specialization</th>
-        <th>Email</th>
-        <th>Contact No.</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div id="teacherContainer" class="teacher-grid"></div>
 </main>
 
 <!-- View Modal -->
@@ -180,38 +177,38 @@ async function loadTeacherData() {
     const sheetName = workbook.SheetNames[0];
     const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
     teacherData = data;
-    renderTable(data);
+    renderCards(data);
   } catch (error) {
     alert("Could not load teacher data. Please check your Google Sheet link.");
     console.error(error);
   }
 }
 
-/* RENDER TABLE */
-function renderTable(list) {
-  const tableBody = document.querySelector("#teacherTable tbody");
-  tableBody.innerHTML = "";
+/* RENDER TEACHER CARDS */
+function renderCards(list) {
+  const container = document.getElementById("teacherContainer");
+  container.innerHTML = "";
   list.forEach((row, index) => {
     const r = {};
     for (let key in row) {
       r[key.trim().toLowerCase()] = row[key];
     }
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r["first name"] || ""}</td>
-      <td>${r["middle name"] || ""}</td>
-      <td>${r["last name"] || ""}</td>
-      <td>${r["position"] || ""}</td>
-      <td>${r["employee number"] || ""}</td>
-      <td>${r["sex"] || ""}</td>
-      <td>${r["age"] || ""}</td>
-      <td>${r["address"] || ""}</td>
-      <td>${r["specialization"] || ""}</td>
-      <td>${r["email"] || ""}</td>
-      <td>${r["contact number"] || ""}</td>
-      <td><button onclick="viewTeacher(${index})">View</button></td>
+
+    const middleInitial = r["middle name"] ? r["middle name"].charAt(0).toUpperCase() + "." : "";
+    const fullName = `${r["first name"] || ""} ${middleInitial} ${r["last name"] || ""}`.trim();
+
+    const card = document.createElement("div");
+    card.classList.add("teacher-card");
+    card.innerHTML = `
+      <div class="teacher-name">${fullName}</div>
+      <div class="teacher-info">
+        <div>${r["position"] || ""}</div>
+        <div style="font-size:0.85rem; color:#555;">${r["email"] || ""}</div>
+        <div style="font-size:0.85rem; color:#555;">${r["contact number"] || ""}</div>
+      </div>
+      <button onclick="viewTeacher(${index})">View</button>
     `;
-    tableBody.appendChild(tr);
+    container.appendChild(card);
   });
 }
 
@@ -222,9 +219,8 @@ function viewTeacher(index) {
   for (let key in t) {
     r[key.trim().toLowerCase()] = t[key];
   }
-
-  document.getElementById('vFullName').textContent =
-    `${r["first name"] || ""} ${r["middle name"] || ""} ${r["last name"] || ""}`;
+  const middleInitial = r["middle name"] ? r["middle name"].charAt(0).toUpperCase() + "." : "";
+  document.getElementById('vFullName').textContent = `${r["first name"] || ""} ${middleInitial} ${r["last name"] || ""}`;
   document.getElementById('vPosition').textContent = r["position"] || "";
   document.getElementById('vEmpNo').textContent = r["employee number"] || "";
   document.getElementById('vSex').textContent = r["sex"] || "";
@@ -233,7 +229,6 @@ function viewTeacher(index) {
   document.getElementById('vSpec').textContent = r["specialization"] || "";
   document.getElementById('vEmail').textContent = r["email"] || "";
   document.getElementById('vContact').textContent = r["contact number"] || "";
-
   document.getElementById('viewModal').style.display = 'block';
 }
 
@@ -242,14 +237,14 @@ function closeModal() {
   document.getElementById('viewModal').style.display = 'none';
 }
 
-/* SEARCH TEACHER */
+/* SEARCH FUNCTION */
 function searchTeacher() {
   const query = document.getElementById('searchInput').value.toLowerCase();
   const filtered = teacherData.filter(t => {
     const values = Object.values(t).join(" ").toLowerCase();
     return values.includes(query);
   });
-  renderTable(filtered);
+  renderCards(filtered);
 }
 
 loadTeacherData();
