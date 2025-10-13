@@ -256,6 +256,7 @@ let contingency = [];
 let currentScheduleTeacher = null;
 
 /* Add Teacher Function */
+/* Add Teacher Function */
 function addTeacher() {
   const empNum = document.getElementById('empNum').value.trim();
   const firstName = document.getElementById('firstName').value.trim();
@@ -268,38 +269,42 @@ function addTeacher() {
   const specialization = document.getElementById('specialization').value.trim();
   const contact = document.getElementById('contact').value.trim();
   const email = document.getElementById('email').value.trim().toLowerCase();
-
-  if(!firstName || !lastName || !position) {
+  const photoInput = document.getElementById('photo'); /* ⭐ NEW CODE ⭐ */
+  
+  if (!firstName || !lastName || !position) {
     alert('Please complete the required fields (Name and Position).');
     return;
   }
 
   const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`;
-  teachers.push({ empNum, firstName, middleName, lastName, fullName, age, sex, address, position, specialization, contact, email, schedules: [] });
-  renderTableFiltered();
-  closeVacantModal();
 
-  ['empNum','firstName','middleName','lastName','age','sex','address','position','specialization','contact','email'].forEach(id=>{
-    document.getElementById(id).value='';
-  });
-}
+  /* ⭐ NEW CODE ⭐ — handle photo */
+  let photoData = '';
+  if (photoInput.files && photoInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      photoData = e.target.result;
+      teachers.push({
+        empNum, firstName, middleName, lastName, fullName, age, sex, address,
+        position, specialization, contact, email, photo: photoData, schedules: []
+      });
+      renderTableFiltered();
+      closeVacantModal();
+    };
+    reader.readAsDataURL(photoInput.files[0]);
+  } else {
+    teachers.push({
+      empNum, firstName, middleName, lastName, fullName, age, sex, address,
+      position, specialization, contact, email, photo: '', schedules: []
+    });
+    renderTableFiltered();
+    closeVacantModal();
+  }
+  /* ⭐ END NEW CODE ⭐ */
 
-/* Render Teacher Table */
-function renderTableFiltered() {
-  const tbody = document.getElementById('facultyList');
-  tbody.innerHTML = teachers.map((t, i) => `
-    <tr>
-      <td>${t.fullName}</td>
-      <td>${t.position}</td>
-      <td>${t.specialization}</td>
-      <td>${t.contact}</td>
-      <td>
-        <button onclick="viewTeacher(${i})">View</button>
-        <button onclick="openAddSchedule(${i})">Add Schedule</button>
-      </td>
-    </tr>
-  `).join('');
-  populateContDropdown();
+  // Clear form fields
+  ['empNum','firstName','middleName','lastName','age','sex','address','position','specialization','contact','email','photo']
+    .forEach(id=>{ document.getElementById(id).value=''; });
 }
 
 /* View Teacher */
@@ -309,7 +314,14 @@ function viewTeacher(i) {
     ? t.schedules.map(s=>`<li>${s.subject} - ${s.day} ${s.start}–${s.end} (${s.room})</li>`).join('')
     : '<i>No schedules yet.</i>';
 
+  /* ⭐ NEW CODE ⭐ — display teacher photo */
+  const photoHTML = t.photo
+    ? `<img src="${t.photo}" alt="Teacher Photo" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin-bottom:10px;">`
+    : `<div style="width:100px;height:100px;border-radius:50%;background:#ccc;text-align:center;line-height:100px;color:#555;margin-bottom:10px;">No Photo</div>`;
+  /* ⭐ END NEW CODE ⭐ */
+
   const info = `
+    ${photoHTML}
     <p><strong>Employee No:</strong> ${t.empNum || '-'}</p>
     <p><strong>Name:</strong> ${t.fullName}</p>
     <p><strong>Age:</strong> ${t.age || '-'}</p>
@@ -323,7 +335,9 @@ function viewTeacher(i) {
     <ul>${scheds}</ul>
   `;
   document.getElementById('teacherInfo').innerHTML = info;
-  document.getElementById('infoModal').style.display='block';
+  document.getElementById('infoModal').style.display = 'block';
+}
+
 }
 
 /* Add Schedule Modal */
@@ -415,3 +429,4 @@ renderTableFiltered();
 
 </body>
 </html>
+
