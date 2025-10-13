@@ -1,60 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pagudpud Integrated School - Teacher List</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pagudpud Integrated School - Faculty Dashboard</title>
+
+<!-- Load SheetJS for Excel/CSV reading -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <style>
+  :root {
+    --blue: #0d3b66;
+    --gold: #ffb703;
+    --bg: #fff8e7;
+  }
   body {
-    font-family: Arial, sans-serif;
-    background: #fff8e7;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
+    background-color: var(--bg);
+  }
+  header {
+    background-color: var(--blue);
+    color: white;
+    padding: 15px 20px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    position: relative;
+  }
+  #clock {
+    position: absolute;
+    top: 8px;
+    left: 15px;
+    font-size: 0.9rem;
+  }
+  main {
     padding: 20px;
   }
-  h1 {
-    color: #0d3b66;
-    text-align: center;
+  .search-bar {
+    margin-bottom: 15px;
+  }
+  input[type="text"] {
+    padding: 10px;
+    width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
   }
   table {
     width: 100%;
     border-collapse: collapse;
     background: white;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   }
   th, td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: center;
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
   }
   th {
-    background: #0d3b66;
+    background-color: var(--gold);
+    color: var(--blue);
+  }
+  button {
+    background-color: var(--blue);
     color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: var(--gold);
+    color: var(--blue);
+  }
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 10;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  .modal-content {
+    background: white;
+    margin: 8% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  .close {
+    color: red;
+    float: right;
+    font-size: 1.3rem;
+    cursor: pointer;
+  }
+  .close:hover {
+    color: darkred;
+  }
+  h3 {
+    color: var(--blue);
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 5px;
   }
 </style>
 </head>
 <body>
-<h1>Pagudpud Integrated School - Teacher Information</h1>
-<table id="teacherTable">
-  <thead>
-    <tr>
-      <th>FIRST NAME</th>
-      <th>MIDDLE NAME</th>
-      <th>LAST NAME</th>
-      <th>POSITION</th>
-      <th>EMPLOYEE NUMBER</th>
-      <th>SEX</th>
-      <th>AGE</th>
-      <th>ADDRESS</th>
-      <th>SPECIALIZATION</th>
-      <th>EMAIL</th>
-      <th>CONTACT NUMBER</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+
+<header>
+  <div id="clock"></div>
+  Pagudpud Integrated School - Faculty Dashboard
+</header>
+
+<main>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search teacher..." onkeyup="searchTeacher()">
+  </div>
+
+  <table id="teacherTable">
+    <thead>
+      <tr>
+        <th>First Name</th>
+        <th>Middle Name</th>
+        <th>Last Name</th>
+        <th>Position</th>
+        <th>Employee No.</th>
+        <th>Sex</th>
+        <th>Age</th>
+        <th>Address</th>
+        <th>Specialization</th>
+        <th>Email</th>
+        <th>Contact No.</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</main>
+
+<!-- View Modal -->
+<div id="viewModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h3>Teacher Information</h3>
+    <p><strong>Full Name:</strong> <span id="vFullName"></span></p>
+    <p><strong>Position:</strong> <span id="vPosition"></span></p>
+    <p><strong>Employee No.:</strong> <span id="vEmpNo"></span></p>
+    <p><strong>Sex:</strong> <span id="vSex"></span></p>
+    <p><strong>Age:</strong> <span id="vAge"></span></p>
+    <p><strong>Address:</strong> <span id="vAddress"></span></p>
+    <p><strong>Specialization:</strong> <span id="vSpec"></span></p>
+    <p><strong>Email:</strong> <span id="vEmail"></span></p>
+    <p><strong>Contact No.:</strong> <span id="vContact"></span></p>
+  </div>
+</div>
 
 <script>
+/* CLOCK */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+let teacherData = [];
+
+/* LOAD DATA FROM GOOGLE SHEET */
 async function loadTeacherData() {
   const fileUrl = "https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/export?format=csv";
 
@@ -64,34 +179,81 @@ async function loadTeacherData() {
     const workbook = XLSX.read(csvData, { type: "string" });
     const sheetName = workbook.SheetNames[0];
     const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-    const tableBody = document.querySelector("#teacherTable tbody");
-    tableBody.innerHTML = "";
-
-    data.forEach(row => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${row["FIRST NAME"] || ""}</td>
-        <td>${row["MIDDLE NAME"] || ""}</td>
-        <td>${row["LAST NAME"] || ""}</td>
-        <td>${row["POSITION"] || ""}</td>
-        <td>${row["EMPLOYEE NUMBER"] || ""}</td>
-        <td>${row["SEX"] || ""}</td>
-        <td>${row["AGE"] || ""}</td>
-        <td>${row["ADDRESS"] || ""}</td>
-        <td>${row["SPECIALIZATION"] || ""}</td>
-        <td>${row["EMAIL"] || ""}</td>
-        <td>${row["CONTACT NUMBER"] || ""}</td>
-      `;
-      tableBody.appendChild(tr);
-    });
+    teacherData = data;
+    renderTable(data);
   } catch (error) {
-    console.error("Error loading data:", error);
-    alert("Could not load teacher data. Please check your Google Sheets sharing settings.");
+    alert("Could not load teacher data. Please check your Google Sheet link.");
+    console.error(error);
   }
+}
+
+/* RENDER TABLE */
+function renderTable(list) {
+  const tableBody = document.querySelector("#teacherTable tbody");
+  tableBody.innerHTML = "";
+  list.forEach((row, index) => {
+    const r = {};
+    for (let key in row) {
+      r[key.trim().toLowerCase()] = row[key];
+    }
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r["first name"] || ""}</td>
+      <td>${r["middle name"] || ""}</td>
+      <td>${r["last name"] || ""}</td>
+      <td>${r["position"] || ""}</td>
+      <td>${r["employee number"] || ""}</td>
+      <td>${r["sex"] || ""}</td>
+      <td>${r["age"] || ""}</td>
+      <td>${r["address"] || ""}</td>
+      <td>${r["specialization"] || ""}</td>
+      <td>${r["email"] || ""}</td>
+      <td>${r["contact number"] || ""}</td>
+      <td><button onclick="viewTeacher(${index})">View</button></td>
+    `;
+    tableBody.appendChild(tr);
+  });
+}
+
+/* VIEW TEACHER DETAILS */
+function viewTeacher(index) {
+  const t = teacherData[index];
+  const r = {};
+  for (let key in t) {
+    r[key.trim().toLowerCase()] = t[key];
+  }
+
+  document.getElementById('vFullName').textContent =
+    `${r["first name"] || ""} ${r["middle name"] || ""} ${r["last name"] || ""}`;
+  document.getElementById('vPosition').textContent = r["position"] || "";
+  document.getElementById('vEmpNo').textContent = r["employee number"] || "";
+  document.getElementById('vSex').textContent = r["sex"] || "";
+  document.getElementById('vAge').textContent = r["age"] || "";
+  document.getElementById('vAddress').textContent = r["address"] || "";
+  document.getElementById('vSpec').textContent = r["specialization"] || "";
+  document.getElementById('vEmail').textContent = r["email"] || "";
+  document.getElementById('vContact').textContent = r["contact number"] || "";
+
+  document.getElementById('viewModal').style.display = 'block';
+}
+
+/* CLOSE MODAL */
+function closeModal() {
+  document.getElementById('viewModal').style.display = 'none';
+}
+
+/* SEARCH TEACHER */
+function searchTeacher() {
+  const query = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = teacherData.filter(t => {
+    const values = Object.values(t).join(" ").toLowerCase();
+    return values.includes(query);
+  });
+  renderTable(filtered);
 }
 
 loadTeacherData();
 </script>
+
 </body>
 </html>
