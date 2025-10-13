@@ -1,433 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Pagudpud Integrated School - Faculty Dashboard</title>
-<style>
-  :root {
-    --blue:#0d3b66;
-    --gold:#ffb703;
-    --bg:#fff8e7;
-  }
-  body {
-    font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
-    background:var(--bg);
-    margin:0;
-    padding:0;
-  }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pagudpud Integrated School - Faculty Dashboard</title>
 
-  #clock {
-    position: absolute;
-    top: 8px;
-    left: 15px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--blue);
-    letter-spacing: 1px;
-  }
+  <!-- Excel reading library -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  header {
-    background:var(--blue);
-    color:white;
-    padding:10px 20px;
-    text-align:center;
-    margin-top:30px;
-  }
-
-  h1 { margin:0; font-size:1.5rem; }
-  .container { padding:20px; }
-
-  button {
-    background:var(--gold);
-    border:none;
-    padding:8px 16px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:600;
-    margin:4px;
-  }
-  button:hover { background:#ffca3a; }
-
-  table {
-    width:100%;
-    border-collapse:collapse;
-    margin-top:15px;
-  }
-  th, td {
-    border:1px solid #ccc;
-    padding:8px;
-    text-align:left;
-  }
-  th { background:var(--blue); color:white; }
-
-  .modal {
-    display:none;
-    position:fixed;
-    z-index:1000;
-    left:0; top:0;
-    width:100%; height:100%;
-    overflow:auto;
-    background-color:rgba(0,0,0,0.5);
-  }
-  .modal-content {
-    background:#fff;
-    margin:3% auto;
-    padding:20px;
-    border-radius:10px;
-    width:90%;
-    max-width:650px;
-  }
-  .close {
-    color:#aaa;
-    float:right;
-    font-size:24px;
-    font-weight:bold;
-  }
-  .close:hover { color:black; cursor:pointer; }
-
-  input, select {
-    width:100%;
-    padding:6px;
-    margin:5px 0;
-    border:1px solid #ccc;
-    border-radius:5px;
-  }
-
-  .schedule-item {
-    border:1px solid #ccc;
-    padding:8px;
-    border-radius:6px;
-    background:#f9f9f9;
-    margin:6px 0;
-  }
-</style>
+  <style>
+    :root {
+      --blue: #0d3b66;
+      --gold: #ffb703;
+      --bg: #fff8e7;
+    }
+    body {
+      font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background-color: var(--bg);
+    }
+    header {
+      background-color: var(--blue);
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      position: relative;
+    }
+    #clock {
+      position: absolute;
+      top: 5px;
+      left: 15px;
+      font-size: 0.9rem;
+    }
+    main {
+      padding: 20px;
+    }
+    .search-bar {
+      margin-bottom: 15px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: var(--gold);
+      color: var(--blue);
+    }
+    button {
+      background-color: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: var(--gold);
+      color: var(--blue);
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      background: white;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 450px;
+    }
+    .close {
+      color: red;
+      float: right;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
-<!-- Clock -->
-<div id="clock"></div>
-
 <header>
-  <h1>Pagudpud Integrated School - Faculty Dashboard</h1>
+  <div id="clock"></div>
+  Pagudpud Integrated School - Faculty Dashboard
 </header>
 
-<div class="container">
-  <h2>Faculty Information</h2>
-  <button onclick="openVacantModal()">Add Teacher</button>
-  <button onclick="openSchedulesModal()">View Schedules</button>
-  <button onclick="openContingencyModal()">Contingency Plan</button>
-  <button onclick="openContingencyList()">Contingency List</button>
-  <button onclick="openVacantChecker()">Check Vacant</button>
+<main>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search teacher..." onkeyup="searchTeacher()">
+  </div>
 
-  <table id="facultyTable">
+  <table>
     <thead>
       <tr>
-        <th>Name</th>
+        <th>First Name</th>
+        <th>Middle Name</th>
+        <th>Last Name</th>
         <th>Position</th>
+        <th>Employee Number</th>
+        <th>Sex</th>
+        <th>Age</th>
+        <th>Address</th>
         <th>Specialization</th>
-        <th>Contact</th>
-        <th>Actions</th>
+        <th>Email</th>
+        <th>Contact Number</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody id="facultyList"></tbody>
   </table>
-</div>
+</main>
 
-<!-- Info Modal -->
-<div id="infoModal" class="modal">
+<!-- Modal for viewing -->
+<div id="viewModal" class="modal">
   <div class="modal-content">
-    <span class="close" onclick="closeInfoModal()">&times;</span>
+    <span class="close" onclick="closeModal('viewModal')">&times;</span>
     <h3>Teacher Information</h3>
-    <div id="teacherInfo"></div>
-  </div>
-</div>
-
-<!-- Add Teacher Modal -->
-<div id="vacantModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeVacantModal()">&times;</span>
-    <h3>Add Teacher</h3>
-
-    <input type="text" id="empNum" placeholder="Employee Number">
-    <input type="text" id="firstName" placeholder="First Name">
-    <input type="text" id="middleName" placeholder="Middle Name">
-    <input type="text" id="lastName" placeholder="Last Name">
-    <input type="number" id="age" placeholder="Age">
-
-    <label>Sex:</label>
-    <select id="sex">
-      <option value="">Select Sex</option>
-      <option>Male</option>
-      <option>Female</option>
-    </select>
-
-    <input type="text" id="address" placeholder="Address">
-
-    <label>Position:</label>
-    <select id="position">
-      <option value="">Select Position</option>
-      <option>Teacher I</option>
-      <option>Teacher II</option>
-      <option>Teacher III</option>
-      <option>Teacher IV</option>
-      <option>Teacher V</option>
-      <option>Teacher VI</option>
-      <option>Teacher VII</option>
-      <option>Master Teacher I</option>
-      <option>Master Teacher II</option>
-      <option>Master Teacher III</option>
-      <option>Master Teacher IV</option>
-    </select>
-
-    <input type="text" id="specialization" placeholder="Specialization">
-    <input type="text" id="contact" placeholder="Contact Number">
-    <input type="email" id="email" placeholder="Email Address">
-
-    <button onclick="addTeacher()">Save</button>
-  </div>
-</div>
-
-<!-- Add Schedule Modal -->
-<div id="addScheduleModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeAddScheduleModal()">&times;</span>
-    <h3>Add Schedule</h3>
-    <div id="scheduleTeacherName" style="font-weight:600;margin-bottom:10px;"></div>
-    <input type="text" id="schedSubject" placeholder="Subject">
-    <input type="text" id="schedDay" placeholder="Day (e.g., Monday)">
-    <input type="time" id="schedStart" placeholder="Start Time">
-    <input type="time" id="schedEnd" placeholder="End Time">
-    <input type="text" id="schedRoom" placeholder="Room">
-    <button onclick="saveSchedule()">Save Schedule</button>
-  </div>
-</div>
-
-<!-- Other Modals -->
-<div id="schedulesModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeSchedulesModal()">&times;</span>
-    <h3>Schedules</h3>
-    <div id="schedulesList"></div>
-  </div>
-</div>
-
-<div id="contModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeContingencyModal()">&times;</span>
-    <h3>Create Contingency Plan</h3>
-    <label>Absent Teacher:</label><br>
-    <select id="absentTeacher"></select><br>
-    <label>Substitute Teacher:</label><br>
-    <select id="substituteTeacher"></select><br>
-    <label>Subject:</label><br>
-    <input type="text" id="subjectCont"><br>
-    <label>Room:</label><br>
-    <input type="text" id="roomCont"><br>
-    <label>Date:</label><br>
-    <input type="date" id="dateCont"><br>
-    <label>Start Time:</label><br>
-    <input type="time" id="startCont"><br>
-    <label>End Time:</label><br>
-    <input type="time" id="endCont"><br>
-    <button onclick="addContingency()">Save Contingency</button>
-  </div>
-</div>
-
-<div id="contListModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeContingencyList()">&times;</span>
-    <h3>Contingency Plans</h3>
-    <div id="contList"></div>
-  </div>
-</div>
-
-<div id="vacantCheckerModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeVacantChecker()">&times;</span>
-    <h3>Vacant Schedule Checker</h3>
-    <div id="vacantCheckerList"></div>
+    <p><strong>First Name:</strong> <span id="vFirstName"></span></p>
+    <p><strong>Middle Name:</strong> <span id="vMiddleName"></span></p>
+    <p><strong>Last Name:</strong> <span id="vLastName"></span></p>
+    <p><strong>Position:</strong> <span id="vPosition"></span></p>
+    <p><strong>Employee Number:</strong> <span id="vEmployeeNumber"></span></p>
+    <p><strong>Sex:</strong> <span id="vSex"></span></p>
+    <p><strong>Age:</strong> <span id="vAge"></span></p>
+    <p><strong>Address:</strong> <span id="vAddress"></span></p>
+    <p><strong>Specialization:</strong> <span id="vSpecialization"></span></p>
+    <p><strong>Email:</strong> <span id="vEmail"></span></p>
+    <p><strong>Contact Number:</strong> <span id="vContactNumber"></span></p>
   </div>
 </div>
 
 <script>
-let teachers = [];
-let contingency = [];
-let currentScheduleTeacher = null;
+  // clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString();
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
 
-/* Add Teacher Function */
-/* Add Teacher Function */
-function addTeacher() {
-  const empNum = document.getElementById('empNum').value.trim();
-  const firstName = document.getElementById('firstName').value.trim();
-  const middleName = document.getElementById('middleName').value.trim();
-  const lastName = document.getElementById('lastName').value.trim();
-  const age = document.getElementById('age').value.trim();
-  const sex = document.getElementById('sex').value;
-  const address = document.getElementById('address').value.trim();
-  const position = document.getElementById('position').value;
-  const specialization = document.getElementById('specialization').value.trim();
-  const contact = document.getElementById('contact').value.trim();
-  const email = document.getElementById('email').value.trim().toLowerCase();
-  const photoInput = document.getElementById('photo'); /* ⭐ NEW CODE ⭐ */
-  
-  if (!firstName || !lastName || !position) {
-    alert('Please complete the required fields (Name and Position).');
-    return;
+  let teachers = [];
+
+  async function loadTeacherData() {
+    // Here is your link, with &download=1 appended
+    const fileUrl = "https://r1deped-my.sharepoint.com/:x:/g/personal/500480_r1_deped_gov_ph/Ed7rzcRKPeBPrnhVBfL_UpMBajnWNzO2eish1INIhO57ZA?e=WPqhgX&download=1";
+
+    try {
+      const response = await fetch(fileUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      teachers = XLSX.utils.sheet_to_json(sheet);
+
+      renderTable(teachers);
+    } catch (error) {
+      console.error("Error loading Excel file:", error);
+      alert("Could not load the teacher data. The link might still not allow direct fetch.");
+    }
   }
 
-  const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`;
-
-  /* ⭐ NEW CODE ⭐ — handle photo */
-  let photoData = '';
-  if (photoInput.files && photoInput.files[0]) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      photoData = e.target.result;
-      teachers.push({
-        empNum, firstName, middleName, lastName, fullName, age, sex, address,
-        position, specialization, contact, email, photo: photoData, schedules: []
-      });
-      renderTableFiltered();
-      closeVacantModal();
-    };
-    reader.readAsDataURL(photoInput.files[0]);
-  } else {
-    teachers.push({
-      empNum, firstName, middleName, lastName, fullName, age, sex, address,
-      position, specialization, contact, email, photo: '', schedules: []
-    });
-    renderTableFiltered();
-    closeVacantModal();
-  }
-  /* ⭐ END NEW CODE ⭐ */
-
-  // Clear form fields
-  ['empNum','firstName','middleName','lastName','age','sex','address','position','specialization','contact','email','photo']
-    .forEach(id=>{ document.getElementById(id).value=''; });
-}
-
-/* View Teacher */
-function viewTeacher(i) {
-  const t = teachers[i];
-  const scheds = t.schedules.length
-    ? t.schedules.map(s=>`<li>${s.subject} - ${s.day} ${s.start}–${s.end} (${s.room})</li>`).join('')
-    : '<i>No schedules yet.</i>';
-
-  /* ⭐ NEW CODE ⭐ — display teacher photo */
-  const photoHTML = t.photo
-    ? `<img src="${t.photo}" alt="Teacher Photo" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin-bottom:10px;">`
-    : `<div style="width:100px;height:100px;border-radius:50%;background:#ccc;text-align:center;line-height:100px;color:#555;margin-bottom:10px;">No Photo</div>`;
-  /* ⭐ END NEW CODE ⭐ */
-
-  const info = `
-    ${photoHTML}
-    <p><strong>Employee No:</strong> ${t.empNum || '-'}</p>
-    <p><strong>Name:</strong> ${t.fullName}</p>
-    <p><strong>Age:</strong> ${t.age || '-'}</p>
-    <p><strong>Sex:</strong> ${t.sex || '-'}</p>
-    <p><strong>Address:</strong> ${t.address || '-'}</p>
-    <p><strong>Position:</strong> ${t.position}</p>
-    <p><strong>Specialization:</strong> ${t.specialization || '-'}</p>
-    <p><strong>Contact:</strong> ${t.contact || '-'}</p>
-    <p><strong>Email:</strong> ${t.email || '-'}</p>
-    <p><strong>Schedules:</strong></p>
-    <ul>${scheds}</ul>
-  `;
-  document.getElementById('teacherInfo').innerHTML = info;
-  document.getElementById('infoModal').style.display = 'block';
-}
-
-}
-
-/* Add Schedule Modal */
-function openAddSchedule(i) {
-  currentScheduleTeacher = i;
-  const t = teachers[i];
-  document.getElementById('scheduleTeacherName').textContent = `Teacher: ${t.fullName}`;
-  document.getElementById('addScheduleModal').style.display='block';
-}
-
-/* Save Schedule */
-function saveSchedule() {
-  const subject = document.getElementById('schedSubject').value.trim();
-  const day = document.getElementById('schedDay').value.trim();
-  const start = document.getElementById('schedStart').value;
-  const end = document.getElementById('schedEnd').value;
-  const room = document.getElementById('schedRoom').value.trim();
-
-  if(!subject || !day || !start || !end) {
-    alert('Please complete all schedule fields.');
-    return;
+  function renderTable(list = teachers) {
+    const tbody = document.getElementById('facultyList');
+    tbody.innerHTML = list.map((t, i) => `
+      <tr>
+        <td>${t["First Name"] || ""}</td>
+        <td>${t["Middle Name"] || ""}</td>
+        <td>${t["Last Name"] || ""}</td>
+        <td>${t["Position"] || ""}</td>
+        <td>${t["Employee Number"] || ""}</td>
+        <td>${t["Sex"] || ""}</td>
+        <td>${t["Age"] || ""}</td>
+        <td>${t["Address"] || ""}</td>
+        <td>${t["Specialization"] || ""}</td>
+        <td>${t["Email"] || ""}</td>
+        <td>${t["Contact Number"] || ""}</td>
+        <td><button onclick="viewTeacher(${i})">View</button></td>
+      </tr>
+    `).join('');
   }
 
-  teachers[currentScheduleTeacher].schedules.push({ subject, day, start, end, room });
-  alert('Schedule added successfully!');
-  closeAddScheduleModal();
-}
+  function viewTeacher(index) {
+    const t = teachers[index];
+    document.getElementById('vFirstName').textContent = t["First Name"] || "";
+    document.getElementById('vMiddleName').textContent = t["Middle Name"] || "";
+    document.getElementById('vLastName').textContent = t["Last Name"] || "";
+    document.getElementById('vPosition').textContent = t["Position"] || "";
+    document.getElementById('vEmployeeNumber').textContent = t["Employee Number"] || "";
+    document.getElementById('vSex').textContent = t["Sex"] || "";
+    document.getElementById('vAge').textContent = t["Age"] || "";
+    document.getElementById('vAddress').textContent = t["Address"] || "";
+    document.getElementById('vSpecialization').textContent = t["Specialization"] || "";
+    document.getElementById('vEmail').textContent = t["Email"] || "";
+    document.getElementById('vContactNumber').textContent = t["Contact Number"] || "";
+    document.getElementById('viewModal').style.display = 'block';
+  }
 
-/* Contingency Functions */
-function addContingency(){
-  const absent = document.getElementById('absentTeacher').value;
-  const substitute = document.getElementById('substituteTeacher').value;
-  const subject = document.getElementById('subjectCont').value;
-  const room = document.getElementById('roomCont').value;
-  const date = document.getElementById('dateCont').value;
-  const start = document.getElementById('startCont').value;
-  const end = document.getElementById('endCont').value;
+  function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+  }
 
-  if(!absent || !substitute) return alert('Please select teachers.');
-  contingency.push({ absent, substitute, subject, room, date, start, end });
-  alert('Contingency Plan Added!');
-  closeContingencyModal();
-}
+  function searchTeacher() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = teachers.filter(t =>
+      `${t["First Name"] || ""} ${t["Middle Name"] || ""} ${t["Last Name"] || ""}`.toLowerCase().includes(query) ||
+      (t["Position"] || "").toLowerCase().includes(query) ||
+      (t["Specialization"] || "").toLowerCase().includes(query)
+    );
+    renderTable(filtered);
+  }
 
-/* Populate Contingency Dropdowns */
-function populateContDropdown(){
-  const absent = document.getElementById('absentTeacher');
-  const substitute = document.getElementById('substituteTeacher');
-  absent.innerHTML = teachers.map(t=>`<option>${t.fullName}</option>`).join('');
-  substitute.innerHTML = teachers.map(t=>`<option>${t.fullName}</option>`).join('');
-}
-
-/* Clock */
-function updateClock(){
-  const now = new Date();
-  let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2,'0');
-  const seconds = now.getSeconds().toString().padStart(2,'0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12 || 12;
-  document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
-}
-setInterval(updateClock,1000);
-updateClock();
-
-/* Modal Controls */
-function openVacantModal(){ document.getElementById('vacantModal').style.display='block'; }
-function closeVacantModal(){ document.getElementById('vacantModal').style.display='none'; }
-function closeAddScheduleModal(){ document.getElementById('addScheduleModal').style.display='none'; }
-function openSchedulesModal(){ document.getElementById('schedulesModal').style.display='block'; }
-function closeSchedulesModal(){ document.getElementById('schedulesModal').style.display='none'; }
-function openContingencyModal(){ document.getElementById('contModal').style.display='block'; }
-function closeContingencyModal(){ document.getElementById('contModal').style.display='none'; }
-function openContingencyList(){ 
-  document.getElementById('contListModal').style.display='block';
-  document.getElementById('contList').innerHTML = contingency.map((c,i)=>`
-    <div class="schedule-item">
-      <div><strong>${i+1}. ${c.absent}</strong> ➜ ${c.substitute}<br>
-      ${c.subject} (${c.room})<br>${c.date} ${c.start}-${c.end}</div>
-    </div>`).join('');
-}
-function closeContingencyList(){ document.getElementById('contListModal').style.display='none'; }
-function openVacantChecker(){ document.getElementById('vacantCheckerModal').style.display='block'; }
-function closeVacantChecker(){ document.getElementById('vacantCheckerModal').style.display='none'; }
-function closeInfoModal(){ document.getElementById('infoModal').style.display='none'; }
-
-renderTableFiltered();
+  // Start loading the Excel file when page opens
+  loadTeacherData();
 </script>
 
 </body>
 </html>
-
-
