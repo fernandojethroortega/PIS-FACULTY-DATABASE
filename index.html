@@ -17,7 +17,6 @@
     padding:0;
   }
 
-  /* Clock styling */
   #clock {
     position: absolute;
     top: 8px;
@@ -106,7 +105,7 @@
 </head>
 <body>
 
-<!-- Clock Display -->
+<!-- Clock -->
 <div id="clock"></div>
 
 <header>
@@ -189,7 +188,22 @@
   </div>
 </div>
 
-<!-- Schedules Modal -->
+<!-- Add Schedule Modal -->
+<div id="addScheduleModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeAddScheduleModal()">&times;</span>
+    <h3>Add Schedule</h3>
+    <div id="scheduleTeacherName" style="font-weight:600;margin-bottom:10px;"></div>
+    <input type="text" id="schedSubject" placeholder="Subject">
+    <input type="text" id="schedDay" placeholder="Day (e.g., Monday)">
+    <input type="time" id="schedStart" placeholder="Start Time">
+    <input type="time" id="schedEnd" placeholder="End Time">
+    <input type="text" id="schedRoom" placeholder="Room">
+    <button onclick="saveSchedule()">Save Schedule</button>
+  </div>
+</div>
+
+<!-- Other Modals -->
 <div id="schedulesModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeSchedulesModal()">&times;</span>
@@ -198,7 +212,6 @@
   </div>
 </div>
 
-<!-- Contingency Modal -->
 <div id="contModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeContingencyModal()">&times;</span>
@@ -221,7 +234,6 @@
   </div>
 </div>
 
-<!-- Contingency List Modal -->
 <div id="contListModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeContingencyList()">&times;</span>
@@ -230,7 +242,6 @@
   </div>
 </div>
 
-<!-- Vacant Checker Modal -->
 <div id="vacantCheckerModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeVacantChecker()">&times;</span>
@@ -242,6 +253,7 @@
 <script>
 let teachers = [];
 let contingency = [];
+let currentScheduleTeacher = null;
 
 /* Add Teacher Function */
 function addTeacher() {
@@ -263,18 +275,16 @@ function addTeacher() {
   }
 
   const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`;
-
-  teachers.push({ empNum, firstName, middleName, lastName, fullName, age, sex, address, position, specialization, contact, email });
+  teachers.push({ empNum, firstName, middleName, lastName, fullName, age, sex, address, position, specialization, contact, email, schedules: [] });
   renderTableFiltered();
   closeVacantModal();
 
-  // Reset fields
   ['empNum','firstName','middleName','lastName','age','sex','address','position','specialization','contact','email'].forEach(id=>{
     document.getElementById(id).value='';
   });
 }
 
-/* Render Table */
+/* Render Teacher Table */
 function renderTableFiltered() {
   const tbody = document.getElementById('facultyList');
   tbody.innerHTML = teachers.map((t, i) => `
@@ -283,15 +293,22 @@ function renderTableFiltered() {
       <td>${t.position}</td>
       <td>${t.specialization}</td>
       <td>${t.contact}</td>
-      <td><button onclick="viewTeacher(${i})">View</button></td>
+      <td>
+        <button onclick="viewTeacher(${i})">View</button>
+        <button onclick="openAddSchedule(${i})">Add Schedule</button>
+      </td>
     </tr>
   `).join('');
   populateContDropdown();
 }
 
-/* View Teacher Info */
+/* View Teacher */
 function viewTeacher(i) {
   const t = teachers[i];
+  const scheds = t.schedules.length
+    ? t.schedules.map(s=>`<li>${s.subject} - ${s.day} ${s.start}–${s.end} (${s.room})</li>`).join('')
+    : '<i>No schedules yet.</i>';
+
   const info = `
     <p><strong>Employee No:</strong> ${t.empNum || '-'}</p>
     <p><strong>Name:</strong> ${t.fullName}</p>
@@ -302,12 +319,40 @@ function viewTeacher(i) {
     <p><strong>Specialization:</strong> ${t.specialization || '-'}</p>
     <p><strong>Contact:</strong> ${t.contact || '-'}</p>
     <p><strong>Email:</strong> ${t.email || '-'}</p>
+    <p><strong>Schedules:</strong></p>
+    <ul>${scheds}</ul>
   `;
   document.getElementById('teacherInfo').innerHTML = info;
   document.getElementById('infoModal').style.display='block';
 }
 
-/* Contingency Handling */
+/* Add Schedule Modal */
+function openAddSchedule(i) {
+  currentScheduleTeacher = i;
+  const t = teachers[i];
+  document.getElementById('scheduleTeacherName').textContent = `Teacher: ${t.fullName}`;
+  document.getElementById('addScheduleModal').style.display='block';
+}
+
+/* Save Schedule */
+function saveSchedule() {
+  const subject = document.getElementById('schedSubject').value.trim();
+  const day = document.getElementById('schedDay').value.trim();
+  const start = document.getElementById('schedStart').value;
+  const end = document.getElementById('schedEnd').value;
+  const room = document.getElementById('schedRoom').value.trim();
+
+  if(!subject || !day || !start || !end) {
+    alert('Please complete all schedule fields.');
+    return;
+  }
+
+  teachers[currentScheduleTeacher].schedules.push({ subject, day, start, end, room });
+  alert('Schedule added successfully!');
+  closeAddScheduleModal();
+}
+
+/* Contingency Functions */
 function addContingency(){
   const absent = document.getElementById('absentTeacher').value;
   const substitute = document.getElementById('substituteTeacher').value;
@@ -323,7 +368,7 @@ function addContingency(){
   closeContingencyModal();
 }
 
-/* Populate Dropdowns */
+/* Populate Contingency Dropdowns */
 function populateContDropdown(){
   const absent = document.getElementById('absentTeacher');
   const substitute = document.getElementById('substituteTeacher');
@@ -347,6 +392,7 @@ updateClock();
 /* Modal Controls */
 function openVacantModal(){ document.getElementById('vacantModal').style.display='block'; }
 function closeVacantModal(){ document.getElementById('vacantModal').style.display='none'; }
+function closeAddScheduleModal(){ document.getElementById('addScheduleModal').style.display='none'; }
 function openSchedulesModal(){ document.getElementById('schedulesModal').style.display='block'; }
 function closeSchedulesModal(){ document.getElementById('schedulesModal').style.display='none'; }
 function openContingencyModal(){ document.getElementById('contModal').style.display='block'; }
