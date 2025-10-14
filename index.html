@@ -97,7 +97,9 @@ function genIdFromName(first,last,middle){
 
 /* Storage */
 let savedPhotos = {};
+let savedSchedules = {};
 try { savedPhotos = JSON.parse(localStorage.getItem('teacherPhotos')||'{}'); } catch(e){ savedPhotos={}; }
+try { savedSchedules = JSON.parse(localStorage.getItem('teacherSchedules')||'{}'); } catch(e){ savedSchedules={}; }
 
 let teacherData = [];
 
@@ -111,13 +113,15 @@ async function loadTeacherData(){
     const wb = XLSX.read(csv, {type:'string'});
     const sheet = wb.Sheets[wb.SheetNames[0]];
     let raw = XLSX.utils.sheet_to_json(sheet, {defval: ''});
+    
     teacherData = raw.map(row=>{
       const normRow={};
       for(const k in row) normRow[normalizeHeader(k)] = row[k];
       const empNo = (normRow['employee number']||normRow['emp no']||normRow['employee_no']||'').toString().trim();
       const id = empNo ? sanitizeKey(empNo) : genIdFromName(normRow['first name'], normRow['last name'], normRow['middle name']);
       const photo = savedPhotos[id] || savedPhotos[empNo] || savedPhotos[sanitizeKey(normRow['first name']+'_'+normRow['last name'])] || '';
-      return {id, empNo, row: normRow, photo: photo||'', schedule: []};
+      const schedule = savedSchedules[id] || [];
+      return {id, empNo, row: normRow, photo: photo||'', schedule};
     });
     renderCards(teacherData);
   } catch(err){ console.error(err); alert('Failed to load sheet. See console for details.'); }
@@ -208,7 +212,11 @@ function handleScheduleUpload(evt,empId){
     const sheet=wb.Sheets[wb.SheetNames[0]];
     const scheduleRows=XLSX.utils.sheet_to_json(sheet,{defval:''});
     const t=teacherData.find(x=>x.id===empId);
-    if(t) t.schedule=scheduleRows;
+    if(t) {
+      t.schedule=scheduleRows;
+      savedSchedules[empId]=scheduleRows;
+      localStorage.setItem('teacherSchedules',JSON.stringify(savedSchedules));
+    }
     alert('Schedule imported successfully. Click "View Schedule" to see it.');
   };
   if(file.name.endsWith('.csv')) reader.readAsBinaryString(file);
