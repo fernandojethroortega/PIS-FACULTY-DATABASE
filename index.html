@@ -158,7 +158,7 @@ function renderCards(list){
 
     // Use Photo URL from sheet if present, otherwise fallback to local or placeholder
     const photoUrlFromSheet = (r['photo url'] || '').trim();
-    const photoSrc = photoUrlFromSheet || item.photo || 'https://via.placeholder.com/100?text=No+Photo';
+    const photoSrc = photoUrlFromSheet || item.photo || 'https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/edit?gid=332455421#gid=332455421';
 
     const card = document.createElement('div');
     card.className = 'teacher-card';
@@ -328,3 +328,4 @@ loadTeacherData();
 </script>
 </body>
 </html>
+
