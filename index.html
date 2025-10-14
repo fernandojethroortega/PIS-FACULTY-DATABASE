@@ -156,7 +156,7 @@ function renderCards(list){
     const r=item.row;
     const middleInitial=r['middle name']?r['middle name'].charAt(0).toUpperCase()+'.':'';
     const fullName=`${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
-    const photoSrc=item.photo||'https://via.placeholder.com/100?text=No+Photo';
+    const photoSrc = (item.row['https://drive.google.com/uc?id=1bHAZnF_lEjVs_YK03osAwTnyhzaHwE-S'] && item.row['https://drive.google.com/uc?id=1bHAZnF_lEjVs_YK03osAwTnyhzaHwE-S'].trim()) || item.photo || 'https://via.placeholder.com/100?text=No+Photo';
     const card=document.createElement('div');
     card.className='teacher-card';
     card.innerHTML=`
@@ -320,3 +320,4 @@ loadTeacherData();
 
 </body>
 </html>
+
