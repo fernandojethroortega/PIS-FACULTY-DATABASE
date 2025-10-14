@@ -63,14 +63,13 @@
 <div id="scheduleModal" class="modal">
   <div class="modal-content" style="width:600px;">
     <span class="close" onclick="closeScheduleModal()">&times;</span>
-    <h3>Teacher Schedule</h3>
+    <h3>Schedule for <span id="scheduleTeacherName"></span></h3>
     <table id="scheduleTable">
       <thead>
         <tr>
           <th>Day</th>
           <th>Subject</th>
-          <th>Start Time</th>
-          <th>End Time</th>
+          <th>Time</th>
           <th>Grade & Section</th>
           <th>Room</th>
         </tr>
@@ -117,7 +116,7 @@ async function loadTeacherData(){
       const empNo = (normRow['employee number']||normRow['emp no']||normRow['employee_no']||'').toString().trim();
       const id = empNo ? sanitizeKey(empNo) : genIdFromName(normRow['first name'], normRow['last name'], normRow['middle name']);
       const photo = savedPhotos[id] || savedPhotos[empNo] || savedPhotos[sanitizeKey(normRow['first name']+'_'+normRow['last name'])] || '';
-      return {id, empNo, row: normRow, photo: photo||''};
+      return {id, empNo, row: normRow, photo: photo||'', schedule: []};
     });
     renderCards(teacherData);
   } catch(err){ console.error(err); alert('Failed to load sheet. See console for details.'); }
@@ -144,38 +143,43 @@ function renderCards(list){
       </div>
       <button onclick="viewTeacher('${item.id}')">View</button>
       <button onclick="viewSchedule('${item.id}')">View Schedule</button>
-      <br><br>
       <button onclick="triggerUpload('${item.id}')">Upload Photo</button>
       <input type="file" accept="image/*" style="display:none" id="file_${item.id}">
+      <button onclick="triggerScheduleUpload('${item.id}')">Import Schedule</button>
+      <input type="file" accept=".csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" id="scheduleFile_${item.id}">
     `;
     container.appendChild(card);
-    const input = card.querySelector(`#file_${item.id}`);
-    input.onchange = (e)=>previewPhoto(e,item.id);
+
+    document.getElementById(`file_${item.id}`).onchange=(e)=>previewPhoto(e,item.id);
+    document.getElementById(`scheduleFile_${item.id}`).onchange=(e)=>handleScheduleUpload(e,item.id);
   });
 }
 
-/* Upload Photo */
-function triggerUpload(empId){ const input=document.getElementById(`file_${empId}`); if(input) input.click(); }
-function previewPhoto(evt, empId){
-  const file=evt.target.files&&evt.target.files[0]; if(!file) return;
+/* Photo upload */
+function triggerUpload(empId){ document.getElementById(`file_${empId}`).click(); }
+function previewPhoto(evt,empId){
+  const file=evt.target.files[0];
+  if(!file) return;
   const reader=new FileReader();
-  reader.onload=function(e){
+  reader.onload=e=>{
     const dataUrl=e.target.result;
     const img=document.getElementById(`photo_${empId}`);
     if(img) img.src=dataUrl;
     savedPhotos[empId]=dataUrl;
-    try{ localStorage.setItem('teacherPhotos', JSON.stringify(savedPhotos)); } catch(err){ console.error(err); }
-    const t = teacherData.find(x=>x.id===empId); if(t) t.photo=dataUrl;
+    try{ localStorage.setItem('teacherPhotos',JSON.stringify(savedPhotos)); } catch(err){ console.error(err); }
+    const t=teacherData.find(x=>x.id===empId);
+    if(t) t.photo=dataUrl;
   };
   reader.readAsDataURL(file);
 }
 
-/* View Teacher */
+/* Teacher info modal */
 function viewTeacher(empId){
-  const t=teacherData.find(x=>x.id===empId); if(!t) return alert('Teacher not found');
+  const t=teacherData.find(x=>x.id===empId);
+  if(!t) return alert('Teacher not found');
   const r=t.row;
-  const middleInitial = r['middle name'] ? r['middle name'].charAt(0).toUpperCase()+'.':'';
-  document.getElementById('vFullName').textContent = `${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
+  const middleInitial=r['middle name']?r['middle name'].charAt(0)+'.':'';
+  document.getElementById('vFullName').textContent=`${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
   document.getElementById('vPosition').textContent=r['position']||'';
   document.getElementById('vEmpNo').textContent=t.empNo||'';
   document.getElementById('vSex').textContent=r['sex']||'';
@@ -188,6 +192,52 @@ function viewTeacher(empId){
 }
 function closeModal(){ document.getElementById('viewModal').style.display='none'; }
 
+/* Schedule modal */
+function triggerScheduleUpload(empId){ document.getElementById(`scheduleFile_${empId}`).click(); }
+function handleScheduleUpload(evt,empId){
+  const file=evt.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    let data=e.target.result;
+    let wb;
+    try{
+      if(file.name.endsWith('.csv')) wb=XLSX.read(data,{type:'binary'});
+      else wb=XLSX.read(data,{type:'array'});
+    }catch(err){ alert('Failed to read file: '+err.message); return; }
+    const sheet=wb.Sheets[wb.SheetNames[0]];
+    const scheduleRows=XLSX.utils.sheet_to_json(sheet,{defval:''});
+    const t=teacherData.find(x=>x.id===empId);
+    if(t) t.schedule=scheduleRows;
+    alert('Schedule imported successfully. Click "View Schedule" to see it.');
+  };
+  if(file.name.endsWith('.csv')) reader.readAsBinaryString(file);
+  else reader.readAsArrayBuffer(file);
+}
+
+function viewSchedule(empId){
+  const t=teacherData.find(x=>x.id===empId);
+  if(!t) return alert('Teacher not found');
+  const fullName=`${t.row['first name']||''} ${t.row['middle name']?t.row['middle name'].charAt(0)+'.':''} ${t.row['last name']||''}`.trim();
+  const rows=t.schedule||[];
+  if(rows.length===0) return alert('No schedule imported yet. Please import your schedule file.');
+  const tbody=document.querySelector('#scheduleTable tbody');
+  tbody.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${r['Day']||''}</td>
+      <td>${r['Subject']||''}</td>
+      <td>${r['Start Time']||''} - ${r['End Time']||''}</td>
+      <td>${r['Grade Level & Section']||r['Grade & Section']||''}</td>
+      <td>${r['Room']||''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('scheduleTeacherName').textContent=fullName;
+  document.getElementById('scheduleModal').style.display='block';
+}
+function closeScheduleModal(){ document.getElementById('scheduleModal').style.display='none'; }
+
 /* Search */
 function searchTeacher(){
   const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
@@ -196,48 +246,9 @@ function searchTeacher(){
   renderCards(filtered);
 }
 
-/* View Schedule */
-async function viewSchedule(empId){
-  const teacher = teacherData.find(t=>t.id===empId);
-  if(!teacher) return alert('Teacher not found');
-  const fullName=`${teacher.row['first name']||''} ${teacher.row['middle name']?teacher.row['middle name'].charAt(0)+'.':''} ${teacher.row['last name']||''}`.trim();
-  const csvUrl = "https://docs.google.com/spreadsheets/d/16LvIVCxl8XhIlLJWzY08IsSyPN_nX5dozW3ltvlI2ns/export?format=csv";
-  try{
-    const res = await fetch(csvUrl);
-    if(!res.ok) throw new Error('Failed to fetch schedule sheet');
-    const csvText = await res.text();
-    const wb = XLSX.read(csvText,{type:'string'});
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet,{defval:''});
-    const filtered = rows.filter(r=>{
-      const teacherCol = r['Teacher']||r['Full Name']||'';
-      return teacherCol.toLowerCase().includes(fullName.toLowerCase());
-    });
-    const tbody = document.querySelector('#scheduleTable tbody');
-    tbody.innerHTML='';
-    if(filtered.length===0){
-      tbody.innerHTML='<tr><td colspan="6" style="text-align:center;">No schedule found</td></tr>';
-    }else{
-      filtered.forEach(r=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`
-          <td>${r['Day']||''}</td>
-          <td>${r['Subject']||''}</td>
-          <td>${r['Start Time']||''}</td>
-          <td>${r['End Time']||''}</td>
-          <td>${r['Grade Level & Section']||r['Grade & Section']||''}</td>
-          <td>${r['Room']||''}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-    document.getElementById('scheduleModal').style.display='block';
-  }catch(err){ console.error(err); alert('Failed to load schedule. See console.'); }
-}
-function closeScheduleModal(){ document.getElementById('scheduleModal').style.display='none'; }
-
-/* Initial Load */
+/* Init */
 loadTeacherData();
 </script>
+
 </body>
 </html>
