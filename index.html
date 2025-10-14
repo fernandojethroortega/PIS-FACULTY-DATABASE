@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Pagudpud Integrated School - Faculty Dashboard</title>
 
-<!-- Load SheetJS for Google Sheet CSV reading -->
+<!-- Load SheetJS -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -172,26 +172,22 @@ setInterval(updateClock, 1000);
 updateClock();
 
 let teacherData = [];
+let savedPhotos = JSON.parse(localStorage.getItem("teacherPhotos") || "{}"); // ✅ Load once
 
 /* LOAD DATA FROM GOOGLE SHEET */
 async function loadTeacherData() {
   const fileUrl = "https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/export?format=csv";
-
   try {
     const response = await fetch(fileUrl);
     const csvData = await response.text();
     const workbook = XLSX.read(csvData, { type: "string" });
     const sheetName = workbook.SheetNames[0];
     const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    teacherData = data.map(t => ({ ...t, photo: null }));
-
-    // 🔹 NEW: Load saved photos from localStorage
-    const savedPhotos = JSON.parse(localStorage.getItem("teacherPhotos") || "{}");
-    teacherData.forEach((t, i) => {
+    
+    teacherData = data.map(t => {
       const empNo = t["Employee Number"] || t["employee number"];
-      if (empNo && savedPhotos[empNo]) {
-        t.photo = savedPhotos[empNo];
-      }
+      const photo = savedPhotos[empNo] || "https://via.placeholder.com/100?text=No+Photo";
+      return { ...t, photo };
     });
 
     renderCards(teacherData);
@@ -211,12 +207,10 @@ function renderCards(list) {
     const middleInitial = r["middle name"] ? r["middle name"].charAt(0).toUpperCase() + "." : "";
     const fullName = `${r["first name"] || ""} ${middleInitial} ${r["last name"] || ""}`.trim();
 
-    const photoSrc = row.photo || "https://via.placeholder.com/100?text=No+Photo";
-
     const card = document.createElement("div");
     card.classList.add("teacher-card");
     card.innerHTML = `
-      <img src="${photoSrc}" alt="Photo" class="teacher-photo" id="photo-${index}">
+      <img src="${row.photo}" alt="Photo" class="teacher-photo" id="photo-${index}">
       <div class="teacher-name">${fullName}</div>
       <div class="teacher-info">
         <div>${r["position"] || ""}</div>
@@ -247,12 +241,10 @@ function previewPhoto(event, index) {
     document.getElementById(`photo-${index}`).src = photoURL;
     teacherData[index].photo = photoURL;
 
-    // 🔹 NEW: Save photo permanently in localStorage using Employee Number
     const empNo = teacherData[index]["Employee Number"] || teacherData[index]["employee number"];
     if (empNo) {
-      const savedPhotos = JSON.parse(localStorage.getItem("teacherPhotos") || "{}");
       savedPhotos[empNo] = photoURL;
-      localStorage.setItem("teacherPhotos", JSON.stringify(savedPhotos));
+      localStorage.setItem("teacherPhotos", JSON.stringify(savedPhotos)); // ✅ Persistent save
     }
   };
   reader.readAsDataURL(file);
