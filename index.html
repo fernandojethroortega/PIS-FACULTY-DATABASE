@@ -4,47 +4,28 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Pagudpud Integrated School - Faculty Dashboard</title>
-
-<!-- SheetJS for Google Sheet CSV -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
 <style>
   :root { --blue:#0d3b66; --gold:#ffb703; --bg:#fff8e7; }
   body { font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; margin:0; background:var(--bg); }
-  
-  header { background:var(--blue); color:#fff; padding:15px 10px; text-align:center; font-size:1.3rem; position:relative; }
-  #clock { position:absolute; top:8px; left:10px; font-size:0.9rem; }
-
-  main { padding:15px; }
-  .search-bar { margin-bottom:15px; text-align:center; }
-  input[type="text"] { padding:10px; width:90%; max-width:320px; border-radius:8px; border:1px solid #ccc; font-size:1rem; }
-
-  .teacher-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
-  .teacher-card { background:#fff; border-radius:12px; padding:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; font-size:0.9rem; }
-  .teacher-photo { width:80px; height:80px; object-fit:cover; border-radius:50%; border:3px solid var(--gold); margin-bottom:8px; }
-  .teacher-name { font-weight:bold; color:var(--blue); font-size:1rem; }
-  .teacher-info { font-size:0.85rem; color:#333; margin-top:5px; }
-  button { background:var(--blue); color:#fff; border:none; padding:6px 10px; border-radius:6px; font-size:0.85rem; cursor:pointer; margin-top:5px; }
+  header { background:var(--blue); color:#fff; padding:15px 20px; text-align:center; font-size:1.4rem; position:relative; }
+  #clock { position:absolute; top:8px; left:15px; font-size:0.9rem; }
+  main { padding:20px; }
+  .search-bar { margin-bottom:20px; text-align:center; }
+  input[type="text"] { padding:10px; width:320px; border-radius:8px; border:1px solid #ccc; }
+  .teacher-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:15px; }
+  .teacher-card { background:#fff; border-radius:12px; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; }
+  .teacher-photo { width:100px; height:100px; object-fit:cover; border-radius:50%; border:3px solid var(--gold); margin-bottom:10px; }
+  .teacher-name { font-weight:bold; color:var(--blue); font-size:1.05rem; }
+  .teacher-info { font-size:0.9rem; color:#333; margin-top:6px; }
+  button { background:var(--blue); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; }
   button:hover { background:var(--gold); color:var(--blue); }
-
-  /* Modal */
-  .modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:20; overflow-y:auto; }
-  .modal-content { background:#fff; margin:10% auto; padding:15px; width:90%; max-width:400px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+  .modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:20; }
+  .modal-content { background:#fff; margin:6% auto; padding:20px; width:420px; border-radius:10px; }
   .close { float:right; color:red; cursor:pointer; font-size:1.2rem; }
-  h3 { color:var(--blue); border-bottom:2px solid var(--gold); padding-bottom:5px; font-size:1.1rem; }
-
-  /* Responsive adjustments */
-  @media (max-width:600px){
-    header { font-size:1.1rem; padding:12px 8px; }
-    #clock { font-size:0.8rem; top:6px; left:8px; }
-    .teacher-photo { width:70px; height:70px; }
-    .teacher-card { font-size:0.85rem; padding:10px; }
-    button { font-size:0.8rem; padding:5px 8px; width:100%; }
-  }
 </style>
 </head>
 <body>
-
 <header>
   <div id="clock"></div>
   PAGUDPUD INTEGRATED SCHOOL — FACULTY DASHBOARD
@@ -75,11 +56,11 @@
 </div>
 
 <script>
-/* Clock */
+/* Simple clock */
 function updateClock(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString(); }
 setInterval(updateClock,1000); updateClock();
 
-/* Helpers */
+/* Utilities */
 function normalizeHeader(h){ return String(h||'').trim().toLowerCase(); }
 function sanitizeKey(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,'_'); }
 function genIdFromName(first,last,middle){ 
@@ -89,47 +70,64 @@ function genIdFromName(first,last,middle){
   return sanitizeKey(`${f}_${m}_${l}`) || ('id_' + Math.random().toString(36).slice(2,9));
 }
 
-/* Load saved photos */
+/* Storage: load once */
 let savedPhotos = {};
-try{ savedPhotos = JSON.parse(localStorage.getItem('teacherPhotos')||'{}'); } catch(e){ savedPhotos={}; }
+try { savedPhotos = JSON.parse(localStorage.getItem('teacherPhotos')||'{}'); } catch(e) { savedPhotos = {}; }
 
+/* teacherData holds full rows plus meta: {id, normalized} */
 let teacherData = [];
 
-/* Load CSV from Google Sheet */
+/* Load CSV from Google Sheets */
 async function loadTeacherData(){
   const fileUrl = "https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/export?format=csv";
-  try{
+  try {
     const res = await fetch(fileUrl);
-    if(!res.ok) throw new Error('Fetch failed '+res.status);
+    if(!res.ok) throw new Error('fetch failed: ' + res.status);
     const csv = await res.text();
-    const wb = XLSX.read(csv,{type:'string'});
+
+    // Parse using SheetJS but normalize headers
+    const wb = XLSX.read(csv, {type:'string'});
     const sheet = wb.Sheets[wb.SheetNames[0]];
-    const raw = XLSX.utils.sheet_to_json(sheet,{defval:''});
-    teacherData = raw.map(row=>{
+    let raw = XLSX.utils.sheet_to_json(sheet, {defval: ''}); // array of objects
+
+    // Normalize headers: build mapping of original -> normalized
+    // We will create rows with normalized keys.
+    teacherData = raw.map(row => {
+      // Build normalized row object
       const normRow = {};
-      for(const k in row){ normRow[normalizeHeader(k)] = row[k]; }
-      const empNo = (normRow['employee number']||'').toString().trim();
+      for (const k in row) {
+        const nk = normalizeHeader(k);
+        normRow[nk] = row[k];
+      }
+      // Determine stable id: prefer employee number, else generate from name
+      const empNo = (normRow['employee number'] || normRow['emp no'] || normRow['employee_no'] || '').toString().trim();
       const id = empNo ? sanitizeKey(empNo) : genIdFromName(normRow['first name'], normRow['last name'], normRow['middle name']);
-      const photo = savedPhotos[id] || '';
-      return {id, empNo, row: normRow, photo};
+      // Put photo from savedPhotos if exists (key is sanitized empNo or generated id)
+      const photo = savedPhotos[id] || savedPhotos[empNo] || savedPhotos[ sanitizeKey(normRow['first name'] + '_' + normRow['last name']) ] || '';
+      return { id, empNo, row: normRow, photo: photo || '' };
     });
+
+    // Render
     renderCards(teacherData);
-  } catch(err){ console.error(err); alert('Failed to load sheet. See console.'); }
+  } catch(err){
+    console.error(err);
+    alert('Failed to load sheet. Check link or internet. See console for details.');
+  }
 }
 
-/* Render cards */
+/* Render - using stable IDs for data-* attributes */
 function renderCards(list){
   const container = document.getElementById('teacherContainer');
-  container.innerHTML='';
-  list.forEach(item=>{
-    const r=item.row;
-    const middleInitial=r['middle name'] ? (r['middle name'].charAt(0).toUpperCase()+'.') : '';
-    const fullName=`${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
-    const photoSrc=item.photo || 'https://via.placeholder.com/100?text=No+Photo';
+  container.innerHTML = '';
+  list.forEach(item => {
+    const r = item.row;
+    const middleInitial = r['middle name'] ? (r['middle name'].charAt(0).toUpperCase() + '.') : '';
+    const fullName = `${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
+    const photoSrc = item.photo || 'https://via.placeholder.com/100?text=No+Photo';
 
-    const card=document.createElement('div');
-    card.className='teacher-card';
-    card.innerHTML=`
+    const card = document.createElement('div');
+    card.className = 'teacher-card';
+    card.innerHTML = `
       <img src="${photoSrc}" alt="photo" class="teacher-photo" data-emp="${item.id}" id="photo_${item.id}">
       <div class="teacher-name">${fullName}</div>
       <div class="teacher-info">
@@ -143,65 +141,74 @@ function renderCards(list){
       <input type="file" accept="image/*" style="display:none" id="file_${item.id}" data-emp="${item.id}">
     `;
     container.appendChild(card);
+
+    // attach onchange handler once (safe even if re-render)
     const input = card.querySelector(`#file_${item.id}`);
-    input.onchange = (e)=>previewPhoto(e,item.id);
+    input.onchange = (e) => previewPhoto(e, item.id);
   });
 }
 
-/* Upload */
+/* Upload trigger uses data-emp id instead of numeric index */
 function triggerUpload(empId){
-  const input=document.getElementById(`file_${empId}`);
+  const input = document.getElementById(`file_${empId}`);
   if(input) input.click();
 }
 
-/* Preview & save */
+/* Preview & save image: store in savedPhotos using stable id */
 function previewPhoto(evt, empId){
   const file = evt.target.files && evt.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload=function(e){
-    const dataUrl=e.target.result;
-    const img=document.getElementById(`photo_${empId}`);
-    if(img) img.src=dataUrl;
-    savedPhotos[empId]=dataUrl;
-    localStorage.setItem('teacherPhotos', JSON.stringify(savedPhotos));
-    const t=teacherData.find(x=>x.id===empId);
-    if(t) t.photo=dataUrl;
+  reader.onload = function(e){
+    const dataUrl = e.target.result;
+    // Update displayed image (if present)
+    const img = document.getElementById(`photo_${empId}`);
+    if(img) img.src = dataUrl;
+
+    // Save to savedPhotos with key empId (stable key)
+    savedPhotos[empId] = dataUrl;
+    try { localStorage.setItem('teacherPhotos', JSON.stringify(savedPhotos)); }
+    catch(err){ console.error('localStorage set failed', err); alert('Cannot save photo to localStorage (storage full?)'); }
+
+    // Also update teacherData entry so next render uses this photo
+    const t = teacherData.find(x => x.id === empId);
+    if(t) t.photo = dataUrl;
   };
   reader.readAsDataURL(file);
 }
 
-/* View modal */
+/* View teacher uses id */
 function viewTeacher(empId){
-  const t=teacherData.find(x=>x.id===empId);
+  const t = teacherData.find(x => x.id === empId);
   if(!t) return alert('Teacher not found');
-  const r=t.row;
-  const middleInitial=r['middle name'] ? (r['middle name'].charAt(0).toUpperCase()+'.') : '';
-  document.getElementById('vFullName').textContent=`${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
-  document.getElementById('vPosition').textContent=r['position']||'';
-  document.getElementById('vEmpNo').textContent=t.empNo||'';
-  document.getElementById('vSex').textContent=r['sex']||'';
-  document.getElementById('vAge').textContent=r['age']||'';
-  document.getElementById('vAddress').textContent=r['address']||'';
-  document.getElementById('vSpec').textContent=r['specialization']||'';
-  document.getElementById('vEmail').textContent=r['email']||'';
-  document.getElementById('vContact').textContent=r['contact number']||r['contact']||'';
-  document.getElementById('viewModal').style.display='block';
+  const r = t.row;
+  const middleInitial = r['middle name'] ? (r['middle name'].charAt(0).toUpperCase() + '.') : '';
+  document.getElementById('vFullName').textContent = `${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
+  document.getElementById('vPosition').textContent = r['position'] || '';
+  document.getElementById('vEmpNo').textContent = t.empNo || '';
+  document.getElementById('vSex').textContent = r['sex'] || '';
+  document.getElementById('vAge').textContent = r['age'] || '';
+  document.getElementById('vAddress').textContent = r['address'] || '';
+  document.getElementById('vSpec').textContent = r['specialization'] || '';
+  document.getElementById('vEmail').textContent = r['email'] || '';
+  document.getElementById('vContact').textContent = r['contact number'] || r['contact'] || '';
+  document.getElementById('viewModal').style.display = 'block';
 }
+function closeModal(){ document.getElementById('viewModal').style.display = 'none'; }
 
-function closeModal(){ document.getElementById('viewModal').style.display='none'; }
-
-/* Search */
+/* SEARCH: filter by any field - still uses teacherData (stable ids) */
 function searchTeacher(){
-  const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+  const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
   if(!q){ renderCards(teacherData); return; }
-  const filtered=teacherData.filter(t=>Object.values(t.row).join(' ').toLowerCase().includes(q));
+  const filtered = teacherData.filter(t => {
+    // join row values
+    return Object.values(t.row).join(' ').toLowerCase().includes(q);
+  });
   renderCards(filtered);
 }
 
-/* Load on start */
+/* Initial load */
 loadTeacherData();
 </script>
-
 </body>
 </html>
