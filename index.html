@@ -12,7 +12,7 @@ header { background:var(--blue); color:#fff; padding:15px 20px; text-align:cente
 #clock { position:absolute; top:8px; left:15px; font-size:0.9rem; }
 main { padding:20px; }
 .search-bar { margin-bottom:20px; text-align:center; }
-input[type="text"] { padding:10px; width:320px; border-radius:8px; border:1px solid #ccc; }
+input[type="text"], input[type="date"], input[type="time"] { padding:10px; border-radius:8px; border:1px solid #ccc; margin:5px; }
 .teacher-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:15px; }
 .teacher-card { background:#fff; border-radius:12px; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; }
 .teacher-photo { width:100px; height:100px; object-fit:cover; border-radius:50%; border:3px solid var(--gold); margin-bottom:10px; }
@@ -36,9 +36,18 @@ th { background:var(--blue); color:#fff; }
 </header>
 
 <main>
+  <!-- Search and Vacant Check -->
   <div class="search-bar">
     <input id="searchInput" type="text" placeholder="Search teacher..." oninput="searchTeacher()">
   </div>
+
+  <div class="search-bar">
+    <input type="date" id="checkDate">
+    <input type="time" id="checkTime">
+    <button onclick="checkVacantTeachers()">Check Vacant Teachers</button>
+  </div>
+
+  <div id="vacantContainer" class="teacher-grid"></div>
   <div id="teacherContainer" class="teacher-grid"></div>
 </main>
 
@@ -128,8 +137,8 @@ async function loadTeacherData(){
 }
 
 /* Render Cards */
-function renderCards(list){
-  const container = document.getElementById('teacherContainer');
+function renderCards(list,containerId='teacherContainer'){
+  const container = document.getElementById(containerId);
   container.innerHTML = '';
   list.forEach(item=>{
     const r=item.row;
@@ -258,6 +267,41 @@ function searchTeacher(){
   if(!q){ renderCards(teacherData); return; }
   const filtered=teacherData.filter(t=>Object.values(t.row).join(' ').toLowerCase().includes(q));
   renderCards(filtered);
+}
+
+/* Check Vacant Teachers */
+function checkVacantTeachers() {
+  const dateStr = document.getElementById('checkDate').value;
+  const timeStr = document.getElementById('checkTime').value;
+  if (!dateStr || !timeStr) return alert('Please select both date and time.');
+
+  const dayName = new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long' });
+  const [selHour, selMin] = timeStr.split(':').map(Number);
+  const selectedMinutes = selHour*60 + selMin;
+
+  const vacant = teacherData.filter(t => {
+    if (!t.schedule || t.schedule.length === 0) return true;
+
+    return !t.schedule.some(r => {
+      const rDay = r['DAY'] || r['Day'] || '';
+      const startTime = r['START TIME'] || r['Start Time'] || '';
+      const endTime = r['END TIME'] || r['End Time'] || '';
+
+      if (rDay.toLowerCase() !== dayName.toLowerCase()) return false;
+
+      const [sH,sM] = startTime.split(':').map(Number);
+      const [eH,eM] = endTime.split(':').map(Number);
+      if (isNaN(sH)||isNaN(eH)) return false;
+
+      const startMinutes = sH*60 + sM;
+      const endMinutes = eH*60 + eM;
+
+      return selectedMinutes >= startMinutes && selectedMinutes < endMinutes;
+    });
+  });
+
+  renderCards(vacant,'vacantContainer');
+  if(vacant.length === 0) document.getElementById('vacantContainer').innerHTML='<p>No teachers are vacant at this time.</p>';
 }
 
 /* Init */
