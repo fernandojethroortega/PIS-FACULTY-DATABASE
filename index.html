@@ -45,7 +45,11 @@
   .school-header img {
     width: 100px;
     height: 100px;
+    object-fit: contain;
+    border-radius: 50%;
     margin-bottom: 8px;
+    background-color: white;
+    padding: 5px;
   }
   .school-header h1 {
     font-size: 1.6rem;
@@ -58,10 +62,20 @@
     font-weight: normal;
     color: #fefefe;
   }
+  .system-title {
+    background-color: var(--gold);
+    color: var(--blue);
+    text-align: center;
+    font-weight: bold;
+    padding: 8px 0;
+    margin-top: 160px;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+  }
 
   /* ===== MAIN CONTENT ===== */
   main {
-    padding: 180px 20px 20px 20px; /* add padding to avoid overlap with fixed header */
+    padding: 20px;
   }
   .teacher-card {
     background: white;
@@ -78,7 +92,6 @@
     height: 80px;
     border-radius: 50%;
     background: #ddd;
-    overflow: hidden;
     object-fit: cover;
   }
   .teacher-info {
@@ -93,15 +106,21 @@
     font-size: 0.9rem;
     color: #444;
   }
-  .upload-btn {
+  .button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .upload-btn, .view-btn {
     background-color: var(--blue);
     color: white;
     border: none;
     padding: 6px 10px;
     border-radius: 6px;
     cursor: pointer;
+    text-align: center;
   }
-  .upload-btn:hover {
+  .upload-btn:hover, .view-btn:hover {
     background-color: var(--gold);
     color: var(--blue);
   }
@@ -120,6 +139,8 @@
     <h2>City of San Fernando, La Union</h2>
   </div>
 </header>
+
+<div class="system-title">FACULTY MANAGEMENT SYSTEM</div>
 
 <main>
   <div id="teacherContainer">Loading teacher data...</div>
@@ -188,10 +209,13 @@ function renderTeachers(teachers) {
           ${t.contact}
         </div>
       </div>
-      <label class="upload-btn">
-        Upload Photo
-        <input type="file" accept="image/*" onchange="uploadPhoto(event, '${t.empNumber}')">
-      </label>
+      <div class="button-group">
+        <label class="upload-btn">
+          Upload Photo
+          <input type="file" accept="image/*" onchange="uploadPhoto(event, '${t.empNumber}')">
+        </label>
+        <button class="view-btn" onclick="viewDetails('${t.empNumber}')">View Full Details</button>
+      </div>
     `;
 
     container.appendChild(div);
@@ -212,6 +236,11 @@ function uploadPhoto(event, empNumber) {
     document.getElementById(`photo-${empNumber}`).src = e.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+// ===== VIEW FULL DETAILS =====
+function viewDetails(empNumber) {
+  alert("Feature coming soon: View full details for employee number " + empNumber);
 }
 
 fetchTeacherData();
