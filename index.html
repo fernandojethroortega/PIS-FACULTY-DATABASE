@@ -12,7 +12,7 @@ header { background:var(--blue); color:#fff; padding:15px 20px; text-align:cente
 #clock { position:absolute; top:8px; left:15px; font-size:0.9rem; }
 main { padding:20px; }
 .search-bar { margin-bottom:20px; text-align:center; }
-input[type="text"], input[type="time"] { padding:8px; width:200px; border-radius:6px; border:1px solid #ccc; margin:4px; }
+input[type="text"] { padding:10px; width:320px; border-radius:8px; border:1px solid #ccc; }
 .teacher-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:15px; }
 .teacher-card { background:#fff; border-radius:12px; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; }
 .teacher-photo { width:100px; height:100px; object-fit:cover; border-radius:50%; border:3px solid var(--gold); margin-bottom:10px; }
@@ -21,12 +21,13 @@ input[type="text"], input[type="time"] { padding:8px; width:200px; border-radius
 button { background:var(--blue); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; margin:3px; }
 button:hover { background:var(--gold); color:var(--blue); }
 .modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:20; overflow:auto; }
-.modal-content { background:#fff; margin:5% auto; padding:20px; width:650px; border-radius:10px; }
+.modal-content { background:#fff; margin:4% auto; padding:20px; width:650px; border-radius:10px; }
 .close { float:right; color:red; cursor:pointer; font-size:1.2rem; }
-table { border-collapse:collapse; width:100%; margin-top:10px; }
+table { border-collapse:collapse; width:100%; }
 th, td { padding:6px 8px; text-align:left; border:1px solid #ccc; font-size:0.9rem; }
 th { background:var(--blue); color:#fff; }
-.add-sched-form { display:flex; flex-wrap:wrap; justify-content:center; gap:5px; margin-top:10px; }
+.add-sched-form { margin-top:15px; display:grid; grid-template-columns:repeat(6, 1fr) auto; gap:6px; align-items:center; }
+.add-sched-form input { padding:6px; border-radius:4px; border:1px solid #ccc; font-size:0.85rem; }
 </style>
 </head>
 <body>
@@ -65,18 +66,6 @@ th { background:var(--blue); color:#fff; }
   <div class="modal-content">
     <span class="close" onclick="closeScheduleModal()">&times;</span>
     <h3>Schedule for <span id="scheduleTeacherName"></span></h3>
-
-    <!-- Add Schedule Form -->
-    <div class="add-sched-form">
-      <input type="text" id="dayInput" placeholder="Day">
-      <input type="text" id="subjectInput" placeholder="Subject">
-      <input type="time" id="startInput" placeholder="Start Time">
-      <input type="time" id="endInput" placeholder="End Time">
-      <input type="text" id="gradeInput" placeholder="Grade & Section">
-      <input type="text" id="roomInput" placeholder="Room">
-      <button onclick="addManualSchedule()">Add Schedule</button>
-    </div>
-
     <table id="scheduleTable">
       <thead>
         <tr>
@@ -91,6 +80,17 @@ th { background:var(--blue); color:#fff; }
       </thead>
       <tbody></tbody>
     </table>
+
+    <!-- ADD Schedule Inputs -->
+    <div class="add-sched-form">
+      <input id="dayInput" placeholder="Day">
+      <input id="subjectInput" placeholder="Subject">
+      <input id="startInput" placeholder="Start Time (e.g. 7:30)">
+      <input id="endInput" placeholder="End Time (e.g. 8:30)">
+      <input id="gradeInput" placeholder="Grade & Section">
+      <input id="roomInput" placeholder="Room">
+      <button onclick="addManualSchedule()">Add Schedule</button>
+    </div>
   </div>
 </div>
 
@@ -99,7 +99,7 @@ th { background:var(--blue); color:#fff; }
 function updateClock(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString(); }
 setInterval(updateClock,1000); updateClock();
 
-/* Helpers */
+/* Utilities */
 function normalizeHeader(h){ return String(h||'').trim().toLowerCase(); }
 function sanitizeKey(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,'_'); }
 function genIdFromName(first,last,middle){ 
@@ -113,27 +113,32 @@ function genIdFromName(first,last,middle){
 let savedPhotos={}, savedSchedules={};
 try{ savedPhotos=JSON.parse(localStorage.getItem('teacherPhotos')||'{}'); }catch(e){}
 try{ savedSchedules=JSON.parse(localStorage.getItem('teacherSchedules')||'{}'); }catch(e){}
-let teacherData=[]; let currentTeacherId=null;
 
-/* Load Teacher Data */
+let teacherData=[];
+let currentTeacherId=null;
+
+/* Load Teacher CSV */
 async function loadTeacherData(){
   const fileUrl="https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/export?format=csv";
   try{
     const res=await fetch(fileUrl);
+    if(!res.ok) throw new Error('Fetch failed');
     const csv=await res.text();
     const wb=XLSX.read(csv,{type:'string'});
     const sheet=wb.Sheets[wb.SheetNames[0]];
-    const raw=XLSX.utils.sheet_to_json(sheet,{defval:''});
+    let raw=XLSX.utils.sheet_to_json(sheet,{defval:''});
+
     teacherData=raw.map(row=>{
-      const norm={}; for(const k in row) norm[normalizeHeader(k)]=row[k];
-      const empNo=(norm['employee number']||norm['emp no']||'').toString().trim();
-      const id=empNo?sanitizeKey(empNo):genIdFromName(norm['first name'],norm['last name'],norm['middle name']);
+      const normRow={};
+      for(const k in row) normRow[normalizeHeader(k)]=row[k];
+      const empNo=(normRow['employee number']||normRow['emp no']||normRow['employee_no']||'').toString().trim();
+      const id=empNo?sanitizeKey(empNo):genIdFromName(normRow['first name'],normRow['last name'],normRow['middle name']);
       const photo=savedPhotos[id]||'';
       const schedule=savedSchedules[id]||[];
-      return {id,empNo,row:norm,photo,schedule};
+      return {id,empNo,row:normRow,photo,schedule};
     });
     renderCards(teacherData);
-  }catch(e){console.error(e); alert("Failed to load data");}
+  }catch(err){console.error(err); alert('Failed to load teacher data.');}
 }
 
 /* Render Cards */
@@ -142,47 +147,50 @@ function renderCards(list){
   container.innerHTML='';
   list.forEach(item=>{
     const r=item.row;
-    const name=`${r['first name']||''} ${r['middle name']?r['middle name'].charAt(0)+'.':''} ${r['last name']||''}`.trim();
-    const photo=item.photo||'https://via.placeholder.com/100?text=No+Photo';
+    const middleInitial=r['middle name']?r['middle name'].charAt(0).toUpperCase()+'.':'';
+    const fullName=`${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
+    const photoSrc=item.photo||'https://via.placeholder.com/100?text=No+Photo';
     const card=document.createElement('div');
     card.className='teacher-card';
     card.innerHTML=`
-      <img src="${photo}" class="teacher-photo" id="photo_${item.id}">
-      <div class="teacher-name">${name}</div>
+      <img src="${photoSrc}" class="teacher-photo" id="photo_${item.id}">
+      <div class="teacher-name">${fullName}</div>
       <div class="teacher-info">
         <div>${r['position']||''}</div>
-        <div>${r['email']||''}</div>
-        <div>${r['contact number']||r['contact']||''}</div>
+        <div style="font-size:0.85rem;color:#555">${r['email']||''}</div>
+        <div style="font-size:0.85rem;color:#555">${r['contact number']||r['contact']||''}</div>
       </div>
       <button onclick="viewTeacher('${item.id}')">View</button>
       <button onclick="viewSchedule('${item.id}')">View Schedule</button>
       <button onclick="triggerUpload('${item.id}')">Upload Photo</button>
-      <input type="file" accept="image/*" id="file_${item.id}" style="display:none">
+      <input type="file" accept="image/*" style="display:none" id="file_${item.id}">
     `;
     container.appendChild(card);
     document.getElementById(`file_${item.id}`).onchange=(e)=>previewPhoto(e,item.id);
   });
 }
 
-/* Photo */
-function triggerUpload(id){ document.getElementById(`file_${id}`).click(); }
-function previewPhoto(e,id){
-  const file=e.target.files[0]; if(!file)return;
-  const r=new FileReader();
-  r.onload=a=>{
-    const data=a.target.result;
-    document.getElementById(`photo_${id}`).src=data;
-    savedPhotos[id]=data;
+/* Photo Upload */
+function triggerUpload(empId){ document.getElementById(`file_${empId}`).click(); }
+function previewPhoto(evt,empId){
+  const file=evt.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const dataUrl=e.target.result;
+    document.getElementById(`photo_${empId}`).src=dataUrl;
+    savedPhotos[empId]=dataUrl;
     localStorage.setItem('teacherPhotos',JSON.stringify(savedPhotos));
   };
-  r.readAsDataURL(file);
+  reader.readAsDataURL(file);
 }
 
-/* View Teacher */
-function viewTeacher(id){
-  const t=teacherData.find(x=>x.id===id);
+/* Teacher Modal */
+function viewTeacher(empId){
+  const t=teacherData.find(x=>x.id===empId);
+  if(!t)return;
   const r=t.row;
-  document.getElementById('vFullName').textContent=`${r['first name']} ${r['middle name']||''} ${r['last name']}`;
+  const middleInitial=r['middle name']?r['middle name'].charAt(0)+'.':'';
+  document.getElementById('vFullName').textContent=`${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
   document.getElementById('vPosition').textContent=r['position']||'';
   document.getElementById('vEmpNo').textContent=t.empNo||'';
   document.getElementById('vSex').textContent=r['sex']||'';
@@ -196,17 +204,18 @@ function viewTeacher(id){
 function closeModal(){ document.getElementById('viewModal').style.display='none'; }
 
 /* Schedule Modal */
-function viewSchedule(id){
-  currentTeacherId=id;
-  const t=teacherData.find(x=>x.id===id);
+function viewSchedule(empId){
+  currentTeacherId=empId;
+  const t=teacherData.find(x=>x.id===empId);
+  if(!t)return;
   document.getElementById('scheduleTeacherName').textContent=
-    `${t.row['first name']} ${t.row['middle name']?t.row['middle name'].charAt(0)+'.':''} ${t.row['last name']}`;
+    `${t.row['first name']||''} ${t.row['middle name']?t.row['middle name'].charAt(0)+'.':''} ${t.row['last name']||''}`;
   renderScheduleTable(t.schedule);
   document.getElementById('scheduleModal').style.display='block';
 }
 function closeScheduleModal(){ document.getElementById('scheduleModal').style.display='none'; }
 
-/* Add Schedule */
+/* Add Manual Schedule */
 function addManualSchedule(){
   if(!currentTeacherId)return;
   const t=teacherData.find(x=>x.id===currentTeacherId);
@@ -225,53 +234,57 @@ function addManualSchedule(){
   document.querySelectorAll('.add-sched-form input').forEach(i=>i.value='');
 }
 
-/* Save Schedules */
+/* Save to localStorage */
 function saveSchedule(id,sched){
   savedSchedules[id]=sched;
   localStorage.setItem('teacherSchedules',JSON.stringify(savedSchedules));
 }
 
-/* Edit/Delete */
-function editSchedule(i){
+/* Edit / Delete */
+function editSchedule(index){
   const t=teacherData.find(x=>x.id===currentTeacherId);
-  const s=t.schedule[i];
-  const newDay=prompt("Edit Day:",s.DAY);
-  const newSub=prompt("Edit Subject:",s.SUBJECT);
-  const newStart=prompt("Edit Start Time:",s["START TIME"]);
-  const newEnd=prompt("Edit End Time:",s["END TIME"]);
-  const newGrade=prompt("Edit Grade & Section:",s["GRADE LEVEL & SECTION"]);
-  const newRoom=prompt("Edit Room:",s.ROOM);
-  if(newDay!==null)s.DAY=newDay;
-  if(newSub!==null)s.SUBJECT=newSub;
-  if(newStart!==null)s["START TIME"]=newStart;
-  if(newEnd!==null)s["END TIME"]=newEnd;
-  if(newGrade!==null)s["GRADE LEVEL & SECTION"]=newGrade;
-  if(newRoom!==null)s.ROOM=newRoom;
+  const sched=t.schedule[index];
+  const newDay=prompt("Edit Day:",sched.DAY);
+  const newSub=prompt("Edit Subject:",sched.SUBJECT);
+  const newStart=prompt("Edit Start Time:",sched["START TIME"]);
+  const newEnd=prompt("Edit End Time:",sched["END TIME"]);
+  const newGrade=prompt("Edit Grade & Section:",sched["GRADE LEVEL & SECTION"]);
+  const newRoom=prompt("Edit Room:",sched.ROOM);
+  if(newDay!==null) sched.DAY=newDay;
+  if(newSub!==null) sched.SUBJECT=newSub;
+  if(newStart!==null) sched["START TIME"]=newStart;
+  if(newEnd!==null) sched["END TIME"]=newEnd;
+  if(newGrade!==null) sched["GRADE LEVEL & SECTION"]=newGrade;
+  if(newRoom!==null) sched.ROOM=newRoom;
   saveSchedule(currentTeacherId,t.schedule);
   renderScheduleTable(t.schedule);
 }
-function deleteSchedule(i){
+
+function deleteSchedule(index){
   if(!confirm("Delete this schedule entry?"))return;
   const t=teacherData.find(x=>x.id===currentTeacherId);
-  t.schedule.splice(i,1);
+  t.schedule.splice(index,1);
   saveSchedule(t.id,t.schedule);
   renderScheduleTable(t.schedule);
 }
 
-/* Render Schedule Table */
+/* Render Table */
 function renderScheduleTable(rows){
   const tbody=document.querySelector('#scheduleTable tbody');
   tbody.innerHTML='';
   rows.forEach((r,i)=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td>${r.DAY}</td>
-      <td>${r.SUBJECT}</td>
-      <td>${r["START TIME"]}</td>
-      <td>${r["END TIME"]}</td>
-      <td>${r["GRADE LEVEL & SECTION"]}</td>
-      <td>${r.ROOM}</td>
-      <td><button onclick="editSchedule(${i})">Edit</button><button onclick="deleteSchedule(${i})">Delete</button></td>
+      <td>${r['DAY']||''}</td>
+      <td>${r['SUBJECT']||''}</td>
+      <td>${r['START TIME']||''}</td>
+      <td>${r['END TIME']||''}</td>
+      <td>${r['GRADE LEVEL & SECTION']||''}</td>
+      <td>${r['ROOM']||''}</td>
+      <td>
+        <button onclick="editSchedule(${i})">Edit</button>
+        <button onclick="deleteSchedule(${i})">Delete</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
