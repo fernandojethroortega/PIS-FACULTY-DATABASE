@@ -18,14 +18,18 @@
   .teacher-photo { width:100px; height:100px; object-fit:cover; border-radius:50%; border:3px solid var(--gold); margin-bottom:10px; }
   .teacher-name { font-weight:bold; color:var(--blue); font-size:1.05rem; }
   .teacher-info { font-size:0.9rem; color:#333; margin-top:6px; }
-  button { background:var(--blue); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; }
+  button { background:var(--blue); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; margin:3px; }
   button:hover { background:var(--gold); color:var(--blue); }
-  .modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:20; }
+  .modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:20; overflow:auto; }
   .modal-content { background:#fff; margin:6% auto; padding:20px; width:420px; border-radius:10px; }
   .close { float:right; color:red; cursor:pointer; font-size:1.2rem; }
+  table { border-collapse:collapse; width:100%; }
+  th, td { padding:6px 8px; text-align:left; border:1px solid #ccc; font-size:0.9rem; }
+  th { background:var(--blue); color:#fff; }
 </style>
 </head>
 <body>
+
 <header>
   <div id="clock"></div>
   PAGUDPUD INTEGRATED SCHOOL — FACULTY DASHBOARD
@@ -38,7 +42,7 @@
   <div id="teacherContainer" class="teacher-grid"></div>
 </main>
 
-<!-- View Modal -->
+<!-- View Teacher Modal -->
 <div id="viewModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal()">&times;</span>
@@ -55,8 +59,29 @@
   </div>
 </div>
 
+<!-- View Schedule Modal -->
+<div id="scheduleModal" class="modal">
+  <div class="modal-content" style="width:600px;">
+    <span class="close" onclick="closeScheduleModal()">&times;</span>
+    <h3>Teacher Schedule</h3>
+    <table id="scheduleTable">
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Subject</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th>Grade & Section</th>
+          <th>Room</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
 <script>
-/* Simple clock */
+/* Clock */
 function updateClock(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString(); }
 setInterval(updateClock,1000); updateClock();
 
@@ -70,65 +95,47 @@ function genIdFromName(first,last,middle){
   return sanitizeKey(`${f}_${m}_${l}`) || ('id_' + Math.random().toString(36).slice(2,9));
 }
 
-/* Storage: load once */
+/* Storage */
 let savedPhotos = {};
-try { savedPhotos = JSON.parse(localStorage.getItem('teacherPhotos')||'{}'); } catch(e) { savedPhotos = {}; }
+try { savedPhotos = JSON.parse(localStorage.getItem('teacherPhotos')||'{}'); } catch(e){ savedPhotos={}; }
 
-/* teacherData holds full rows plus meta: {id, normalized} */
 let teacherData = [];
 
-/* Load CSV from Google Sheets */
+/* Load Teacher CSV */
 async function loadTeacherData(){
   const fileUrl = "https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/export?format=csv";
   try {
     const res = await fetch(fileUrl);
     if(!res.ok) throw new Error('fetch failed: ' + res.status);
     const csv = await res.text();
-
-    // Parse using SheetJS but normalize headers
     const wb = XLSX.read(csv, {type:'string'});
     const sheet = wb.Sheets[wb.SheetNames[0]];
-    let raw = XLSX.utils.sheet_to_json(sheet, {defval: ''}); // array of objects
-
-    // Normalize headers: build mapping of original -> normalized
-    // We will create rows with normalized keys.
-    teacherData = raw.map(row => {
-      // Build normalized row object
-      const normRow = {};
-      for (const k in row) {
-        const nk = normalizeHeader(k);
-        normRow[nk] = row[k];
-      }
-      // Determine stable id: prefer employee number, else generate from name
-      const empNo = (normRow['employee number'] || normRow['emp no'] || normRow['employee_no'] || '').toString().trim();
+    let raw = XLSX.utils.sheet_to_json(sheet, {defval: ''});
+    teacherData = raw.map(row=>{
+      const normRow={};
+      for(const k in row) normRow[normalizeHeader(k)] = row[k];
+      const empNo = (normRow['employee number']||normRow['emp no']||normRow['employee_no']||'').toString().trim();
       const id = empNo ? sanitizeKey(empNo) : genIdFromName(normRow['first name'], normRow['last name'], normRow['middle name']);
-      // Put photo from savedPhotos if exists (key is sanitized empNo or generated id)
-      const photo = savedPhotos[id] || savedPhotos[empNo] || savedPhotos[ sanitizeKey(normRow['first name'] + '_' + normRow['last name']) ] || '';
-      return { id, empNo, row: normRow, photo: photo || '' };
+      const photo = savedPhotos[id] || savedPhotos[empNo] || savedPhotos[sanitizeKey(normRow['first name']+'_'+normRow['last name'])] || '';
+      return {id, empNo, row: normRow, photo: photo||''};
     });
-
-    // Render
     renderCards(teacherData);
-  } catch(err){
-    console.error(err);
-    alert('Failed to load sheet. Check link or internet. See console for details.');
-  }
+  } catch(err){ console.error(err); alert('Failed to load sheet. See console for details.'); }
 }
 
-/* Render - using stable IDs for data-* attributes */
+/* Render Cards */
 function renderCards(list){
   const container = document.getElementById('teacherContainer');
   container.innerHTML = '';
-  list.forEach(item => {
-    const r = item.row;
-    const middleInitial = r['middle name'] ? (r['middle name'].charAt(0).toUpperCase() + '.') : '';
+  list.forEach(item=>{
+    const r=item.row;
+    const middleInitial = r['middle name'] ? r['middle name'].charAt(0).toUpperCase()+'.' : '';
     const fullName = `${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
     const photoSrc = item.photo || 'https://via.placeholder.com/100?text=No+Photo';
-
     const card = document.createElement('div');
-    card.className = 'teacher-card';
+    card.className='teacher-card';
     card.innerHTML = `
-      <img src="${photoSrc}" alt="photo" class="teacher-photo" data-emp="${item.id}" id="photo_${item.id}">
+      <img src="${photoSrc}" alt="photo" class="teacher-photo" id="photo_${item.id}">
       <div class="teacher-name">${fullName}</div>
       <div class="teacher-info">
         <div>${r['position']||''}</div>
@@ -136,78 +143,100 @@ function renderCards(list){
         <div style="font-size:0.85rem;color:#555">${r['contact number']||r['contact']||''}</div>
       </div>
       <button onclick="viewTeacher('${item.id}')">View</button>
+      <button onclick="viewSchedule('${item.id}')">View Schedule</button>
       <br><br>
       <button onclick="triggerUpload('${item.id}')">Upload Photo</button>
-      <input type="file" accept="image/*" style="display:none" id="file_${item.id}" data-emp="${item.id}">
+      <input type="file" accept="image/*" style="display:none" id="file_${item.id}">
     `;
     container.appendChild(card);
-
-    // attach onchange handler once (safe even if re-render)
     const input = card.querySelector(`#file_${item.id}`);
-    input.onchange = (e) => previewPhoto(e, item.id);
+    input.onchange = (e)=>previewPhoto(e,item.id);
   });
 }
 
-/* Upload trigger uses data-emp id instead of numeric index */
-function triggerUpload(empId){
-  const input = document.getElementById(`file_${empId}`);
-  if(input) input.click();
-}
-
-/* Preview & save image: store in savedPhotos using stable id */
+/* Upload Photo */
+function triggerUpload(empId){ const input=document.getElementById(`file_${empId}`); if(input) input.click(); }
 function previewPhoto(evt, empId){
-  const file = evt.target.files && evt.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    const dataUrl = e.target.result;
-    // Update displayed image (if present)
-    const img = document.getElementById(`photo_${empId}`);
-    if(img) img.src = dataUrl;
-
-    // Save to savedPhotos with key empId (stable key)
-    savedPhotos[empId] = dataUrl;
-    try { localStorage.setItem('teacherPhotos', JSON.stringify(savedPhotos)); }
-    catch(err){ console.error('localStorage set failed', err); alert('Cannot save photo to localStorage (storage full?)'); }
-
-    // Also update teacherData entry so next render uses this photo
-    const t = teacherData.find(x => x.id === empId);
-    if(t) t.photo = dataUrl;
+  const file=evt.target.files&&evt.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const dataUrl=e.target.result;
+    const img=document.getElementById(`photo_${empId}`);
+    if(img) img.src=dataUrl;
+    savedPhotos[empId]=dataUrl;
+    try{ localStorage.setItem('teacherPhotos', JSON.stringify(savedPhotos)); } catch(err){ console.error(err); }
+    const t = teacherData.find(x=>x.id===empId); if(t) t.photo=dataUrl;
   };
   reader.readAsDataURL(file);
 }
 
-/* View teacher uses id */
+/* View Teacher */
 function viewTeacher(empId){
-  const t = teacherData.find(x => x.id === empId);
-  if(!t) return alert('Teacher not found');
-  const r = t.row;
-  const middleInitial = r['middle name'] ? (r['middle name'].charAt(0).toUpperCase() + '.') : '';
+  const t=teacherData.find(x=>x.id===empId); if(!t) return alert('Teacher not found');
+  const r=t.row;
+  const middleInitial = r['middle name'] ? r['middle name'].charAt(0).toUpperCase()+'.':'';
   document.getElementById('vFullName').textContent = `${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
-  document.getElementById('vPosition').textContent = r['position'] || '';
-  document.getElementById('vEmpNo').textContent = t.empNo || '';
-  document.getElementById('vSex').textContent = r['sex'] || '';
-  document.getElementById('vAge').textContent = r['age'] || '';
-  document.getElementById('vAddress').textContent = r['address'] || '';
-  document.getElementById('vSpec').textContent = r['specialization'] || '';
-  document.getElementById('vEmail').textContent = r['email'] || '';
-  document.getElementById('vContact').textContent = r['contact number'] || r['contact'] || '';
-  document.getElementById('viewModal').style.display = 'block';
+  document.getElementById('vPosition').textContent=r['position']||'';
+  document.getElementById('vEmpNo').textContent=t.empNo||'';
+  document.getElementById('vSex').textContent=r['sex']||'';
+  document.getElementById('vAge').textContent=r['age']||'';
+  document.getElementById('vAddress').textContent=r['address']||'';
+  document.getElementById('vSpec').textContent=r['specialization']||'';
+  document.getElementById('vEmail').textContent=r['email']||'';
+  document.getElementById('vContact').textContent=r['contact number']||r['contact']||'';
+  document.getElementById('viewModal').style.display='block';
 }
-function closeModal(){ document.getElementById('viewModal').style.display = 'none'; }
+function closeModal(){ document.getElementById('viewModal').style.display='none'; }
 
-/* SEARCH: filter by any field - still uses teacherData (stable ids) */
+/* Search */
 function searchTeacher(){
-  const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
   if(!q){ renderCards(teacherData); return; }
-  const filtered = teacherData.filter(t => {
-    // join row values
-    return Object.values(t.row).join(' ').toLowerCase().includes(q);
-  });
+  const filtered=teacherData.filter(t=>Object.values(t.row).join(' ').toLowerCase().includes(q));
   renderCards(filtered);
 }
 
-/* Initial load */
+/* View Schedule */
+async function viewSchedule(empId){
+  const teacher = teacherData.find(t=>t.id===empId);
+  if(!teacher) return alert('Teacher not found');
+  const fullName=`${teacher.row['first name']||''} ${teacher.row['middle name']?teacher.row['middle name'].charAt(0)+'.':''} ${teacher.row['last name']||''}`.trim();
+  const csvUrl = "https://docs.google.com/spreadsheets/d/16LvIVCxl8XhIlLJWzY08IsSyPN_nX5dozW3ltvlI2ns/export?format=csv";
+  try{
+    const res = await fetch(csvUrl);
+    if(!res.ok) throw new Error('Failed to fetch schedule sheet');
+    const csvText = await res.text();
+    const wb = XLSX.read(csvText,{type:'string'});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet,{defval:''});
+    const filtered = rows.filter(r=>{
+      const teacherCol = r['Teacher']||r['Full Name']||'';
+      return teacherCol.toLowerCase().includes(fullName.toLowerCase());
+    });
+    const tbody = document.querySelector('#scheduleTable tbody');
+    tbody.innerHTML='';
+    if(filtered.length===0){
+      tbody.innerHTML='<tr><td colspan="6" style="text-align:center;">No schedule found</td></tr>';
+    }else{
+      filtered.forEach(r=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${r['Day']||''}</td>
+          <td>${r['Subject']||''}</td>
+          <td>${r['Start Time']||''}</td>
+          <td>${r['End Time']||''}</td>
+          <td>${r['Grade Level & Section']||r['Grade & Section']||''}</td>
+          <td>${r['Room']||''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    document.getElementById('scheduleModal').style.display='block';
+  }catch(err){ console.error(err); alert('Failed to load schedule. See console.'); }
+}
+function closeScheduleModal(){ document.getElementById('scheduleModal').style.display='none'; }
+
+/* Initial Load */
 loadTeacherData();
 </script>
 </body>
