@@ -60,9 +60,18 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     padding: 15px;
     transition: transform 0.2s ease;
+    text-align: center;
   }
   .teacher-card:hover {
     transform: translateY(-3px);
+  }
+  .teacher-photo {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--gold);
+    margin-bottom: 10px;
   }
   .teacher-name {
     font-weight: bold;
@@ -80,7 +89,7 @@
     border: none;
     border-radius: 6px;
     padding: 6px 12px;
-    margin-top: 10px;
+    margin-top: 8px;
     cursor: pointer;
   }
   button:hover {
@@ -176,8 +185,8 @@ async function loadTeacherData() {
     const workbook = XLSX.read(csvData, { type: "string" });
     const sheetName = workbook.SheetNames[0];
     const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    teacherData = data;
-    renderCards(data);
+    teacherData = data.map(t => ({ ...t, photo: null })); // add photo property
+    renderCards(teacherData);
   } catch (error) {
     alert("Could not load teacher data. Please check your Google Sheet link.");
     console.error(error);
@@ -190,16 +199,16 @@ function renderCards(list) {
   container.innerHTML = "";
   list.forEach((row, index) => {
     const r = {};
-    for (let key in row) {
-      r[key.trim().toLowerCase()] = row[key];
-    }
-
+    for (let key in row) r[key.trim().toLowerCase()] = row[key];
     const middleInitial = r["middle name"] ? r["middle name"].charAt(0).toUpperCase() + "." : "";
     const fullName = `${r["first name"] || ""} ${middleInitial} ${r["last name"] || ""}`.trim();
+
+    const photoSrc = row.photo || "https://via.placeholder.com/100?text=No+Photo";
 
     const card = document.createElement("div");
     card.classList.add("teacher-card");
     card.innerHTML = `
+      <img src="${photoSrc}" alt="Photo" class="teacher-photo" id="photo-${index}">
       <div class="teacher-name">${fullName}</div>
       <div class="teacher-info">
         <div>${r["position"] || ""}</div>
@@ -207,18 +216,37 @@ function renderCards(list) {
         <div style="font-size:0.85rem; color:#555;">${r["contact number"] || ""}</div>
       </div>
       <button onclick="viewTeacher(${index})">View</button>
+      <br>
+      <button onclick="uploadPhoto(${index})">Upload Photo</button>
+      <input type="file" accept="image/*" id="fileInput-${index}" style="display:none" onchange="previewPhoto(event, ${index})">
     `;
     container.appendChild(card);
   });
+}
+
+/* UPLOAD PHOTO */
+function uploadPhoto(index) {
+  document.getElementById(`fileInput-${index}`).click();
+}
+
+/* PREVIEW UPLOADED PHOTO */
+function previewPhoto(event, index) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const photoURL = e.target.result;
+    document.getElementById(`photo-${index}`).src = photoURL;
+    teacherData[index].photo = photoURL; // store in memory
+  };
+  reader.readAsDataURL(file);
 }
 
 /* VIEW TEACHER DETAILS */
 function viewTeacher(index) {
   const t = teacherData[index];
   const r = {};
-  for (let key in t) {
-    r[key.trim().toLowerCase()] = t[key];
-  }
+  for (let key in t) r[key.trim().toLowerCase()] = t[key];
   const middleInitial = r["middle name"] ? r["middle name"].charAt(0).toUpperCase() + "." : "";
   document.getElementById('vFullName').textContent = `${r["first name"] || ""} ${middleInitial} ${r["last name"] || ""}`;
   document.getElementById('vPosition').textContent = r["position"] || "";
@@ -240,10 +268,7 @@ function closeModal() {
 /* SEARCH FUNCTION */
 function searchTeacher() {
   const query = document.getElementById('searchInput').value.toLowerCase();
-  const filtered = teacherData.filter(t => {
-    const values = Object.values(t).join(" ").toLowerCase();
-    return values.includes(query);
-  });
+  const filtered = teacherData.filter(t => Object.values(t).join(" ").toLowerCase().includes(query));
   renderCards(filtered);
 }
 
