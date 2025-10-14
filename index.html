@@ -48,7 +48,6 @@
     border-radius: 8px;
   }
 
-  /* Card Layout */
   .teacher-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -97,7 +96,6 @@
     color: var(--blue);
   }
 
-  /* Modal */
   .modal {
     display: none;
     position: fixed;
@@ -185,7 +183,17 @@ async function loadTeacherData() {
     const workbook = XLSX.read(csvData, { type: "string" });
     const sheetName = workbook.SheetNames[0];
     const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    teacherData = data.map(t => ({ ...t, photo: null })); // add photo property
+    teacherData = data.map(t => ({ ...t, photo: null }));
+
+    // 🔹 NEW: Load saved photos from localStorage
+    const savedPhotos = JSON.parse(localStorage.getItem("teacherPhotos") || "{}");
+    teacherData.forEach((t, i) => {
+      const empNo = t["Employee Number"] || t["employee number"];
+      if (empNo && savedPhotos[empNo]) {
+        t.photo = savedPhotos[empNo];
+      }
+    });
+
     renderCards(teacherData);
   } catch (error) {
     alert("Could not load teacher data. Please check your Google Sheet link.");
@@ -229,7 +237,7 @@ function uploadPhoto(index) {
   document.getElementById(`fileInput-${index}`).click();
 }
 
-/* PREVIEW UPLOADED PHOTO */
+/* PREVIEW & SAVE PHOTO */
 function previewPhoto(event, index) {
   const file = event.target.files[0];
   if (!file) return;
@@ -237,7 +245,15 @@ function previewPhoto(event, index) {
   reader.onload = function(e) {
     const photoURL = e.target.result;
     document.getElementById(`photo-${index}`).src = photoURL;
-    teacherData[index].photo = photoURL; // store in memory
+    teacherData[index].photo = photoURL;
+
+    // 🔹 NEW: Save photo permanently in localStorage using Employee Number
+    const empNo = teacherData[index]["Employee Number"] || teacherData[index]["employee number"];
+    if (empNo) {
+      const savedPhotos = JSON.parse(localStorage.getItem("teacherPhotos") || "{}");
+      savedPhotos[empNo] = photoURL;
+      localStorage.setItem("teacherPhotos", JSON.stringify(savedPhotos));
+    }
   };
   reader.readAsDataURL(file);
 }
