@@ -21,13 +21,13 @@ input[type="text"] { padding:10px; width:320px; border-radius:8px; border:1px so
 button { background:var(--blue); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; margin:3px; }
 button:hover { background:var(--gold); color:var(--blue); }
 .modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:20; overflow:auto; }
-.modal-content { background:#fff; margin:6% auto; padding:20px; width:650px; border-radius:10px; }
+.modal-content { background:#fff; margin:4% auto; padding:20px; width:650px; border-radius:10px; }
 .close { float:right; color:red; cursor:pointer; font-size:1.2rem; }
 table { border-collapse:collapse; width:100%; }
 th, td { padding:6px 8px; text-align:left; border:1px solid #ccc; font-size:0.9rem; }
 th { background:var(--blue); color:#fff; }
-form label { display:block; margin-top:8px; font-weight:bold; }
-form input, form select { width:100%; padding:6px; border-radius:6px; border:1px solid #ccc; margin-top:3px; }
+.add-sched-form { margin-top:15px; display:grid; grid-template-columns:repeat(6, 1fr) auto; gap:6px; align-items:center; }
+.add-sched-form input { padding:6px; border-radius:4px; border:1px solid #ccc; font-size:0.85rem; }
 </style>
 </head>
 <body>
@@ -66,7 +66,6 @@ form input, form select { width:100%; padding:6px; border-radius:6px; border:1px
   <div class="modal-content">
     <span class="close" onclick="closeScheduleModal()">&times;</span>
     <h3>Schedule for <span id="scheduleTeacherName"></span></h3>
-    <button onclick="openAddScheduleForm()">Add Schedule</button>
     <table id="scheduleTable">
       <thead>
         <tr>
@@ -81,40 +80,17 @@ form input, form select { width:100%; padding:6px; border-radius:6px; border:1px
       </thead>
       <tbody></tbody>
     </table>
-  </div>
-</div>
 
-<!-- Add Schedule Modal -->
-<div id="addScheduleModal" class="modal">
-  <div class="modal-content" style="width:420px;">
-    <span class="close" onclick="closeAddScheduleForm()">&times;</span>
-    <h3>Add / Edit Schedule</h3>
-    <form id="scheduleForm" onsubmit="saveSchedule(event)">
-      <input type="hidden" id="editingIndex">
-      <label for="day">Day</label>
-      <select id="day" required>
-        <option value="">-- Select Day --</option>
-        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
-        <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
-      </select>
-
-      <label for="subject">Subject</label>
-      <input type="text" id="subject" required>
-
-      <label for="startTime">Start Time</label>
-      <input type="time" id="startTime" required>
-
-      <label for="endTime">End Time</label>
-      <input type="time" id="endTime" required>
-
-      <label for="section">Grade Level & Section</label>
-      <input type="text" id="section" required>
-
-      <label for="room">Room</label>
-      <input type="text" id="room" required>
-
-      <button type="submit">Save</button>
-    </form>
+    <!-- ADD Schedule Inputs -->
+    <div class="add-sched-form">
+      <input id="dayInput" placeholder="Day">
+      <input id="subjectInput" placeholder="Subject">
+      <input id="startInput" placeholder="Start Time (e.g. 7:30)">
+      <input id="endInput" placeholder="End Time (e.g. 8:30)">
+      <input id="gradeInput" placeholder="Grade & Section">
+      <input id="roomInput" placeholder="Room">
+      <button onclick="addManualSchedule()">Add Schedule</button>
+    </div>
   </div>
 </div>
 
@@ -123,159 +99,201 @@ form input, form select { width:100%; padding:6px; border-radius:6px; border:1px
 function updateClock(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString(); }
 setInterval(updateClock,1000); updateClock();
 
-/* Storage */
-let savedPhotos = {};
-let savedSchedules = {};
-try { savedPhotos = JSON.parse(localStorage.getItem('teacherPhotos')||'{}'); } catch(e){ savedPhotos={}; }
-try { savedSchedules = JSON.parse(localStorage.getItem('teacherSchedules')||'{}'); } catch(e){ savedSchedules={}; }
+/* Utilities */
+function normalizeHeader(h){ return String(h||'').trim().toLowerCase(); }
+function sanitizeKey(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,'_'); }
+function genIdFromName(first,last,middle){ 
+  const f=(first||'').trim().toLowerCase();
+  const l=(last||'').trim().toLowerCase();
+  const m=(middle||'').trim().toLowerCase().charAt(0)||'';
+  return sanitizeKey(`${f}_${m}_${l}`)||('id_'+Math.random().toString(36).slice(2,9));
+}
 
-let teacherData = [];
-let currentTeacherId = null;
+/* Storage */
+let savedPhotos={}, savedSchedules={};
+try{ savedPhotos=JSON.parse(localStorage.getItem('teacherPhotos')||'{}'); }catch(e){}
+try{ savedSchedules=JSON.parse(localStorage.getItem('teacherSchedules')||'{}'); }catch(e){}
+
+let teacherData=[];
+let currentTeacherId=null;
 
 /* Load Teacher CSV */
 async function loadTeacherData(){
-  const fileUrl = "https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/export?format=csv";
-  try {
-    const res = await fetch(fileUrl);
-    const csv = await res.text();
-    const wb = XLSX.read(csv, {type:'string'});
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    let raw = XLSX.utils.sheet_to_json(sheet, {defval: ''});
-    
-    teacherData = raw.map((r,i)=>{
-      const id = (r['Employee No.']||r['Employee Number']||('id_'+i)).toString().trim();
-      const photo = savedPhotos[id] || '';
-      const schedule = savedSchedules[id] || [];
-      return { id, row: r, photo, schedule };
+  const fileUrl="https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/export?format=csv";
+  try{
+    const res=await fetch(fileUrl);
+    if(!res.ok) throw new Error('Fetch failed');
+    const csv=await res.text();
+    const wb=XLSX.read(csv,{type:'string'});
+    const sheet=wb.Sheets[wb.SheetNames[0]];
+    let raw=XLSX.utils.sheet_to_json(sheet,{defval:''});
+
+    teacherData=raw.map(row=>{
+      const normRow={};
+      for(const k in row) normRow[normalizeHeader(k)]=row[k];
+      const empNo=(normRow['employee number']||normRow['emp no']||normRow['employee_no']||'').toString().trim();
+      const id=empNo?sanitizeKey(empNo):genIdFromName(normRow['first name'],normRow['last name'],normRow['middle name']);
+      const photo=savedPhotos[id]||'';
+      const schedule=savedSchedules[id]||[];
+      return {id,empNo,row:normRow,photo,schedule};
     });
     renderCards(teacherData);
-  } catch(err){ alert('Failed to load sheet.'); console.error(err); }
+  }catch(err){console.error(err); alert('Failed to load teacher data.');}
 }
 
 /* Render Cards */
 function renderCards(list){
-  const container = document.getElementById('teacherContainer');
-  container.innerHTML = '';
+  const container=document.getElementById('teacherContainer');
+  container.innerHTML='';
   list.forEach(item=>{
     const r=item.row;
-    const fullName=`${r['First Name']||''} ${(r['Middle Name']||'').charAt(0)}. ${r['Last Name']||''}`;
-    const photo=item.photo||'https://via.placeholder.com/100?text=No+Photo';
-    const div=document.createElement('div');
-    div.className='teacher-card';
-    div.innerHTML=`
-      <img src="${photo}" class="teacher-photo">
+    const middleInitial=r['middle name']?r['middle name'].charAt(0).toUpperCase()+'.':'';
+    const fullName=`${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
+    const photoSrc=item.photo||'https://via.placeholder.com/100?text=No+Photo';
+    const card=document.createElement('div');
+    card.className='teacher-card';
+    card.innerHTML=`
+      <img src="${photoSrc}" class="teacher-photo" id="photo_${item.id}">
       <div class="teacher-name">${fullName}</div>
-      <div class="teacher-info">${r['Position']||''}</div>
+      <div class="teacher-info">
+        <div>${r['position']||''}</div>
+        <div style="font-size:0.85rem;color:#555">${r['email']||''}</div>
+        <div style="font-size:0.85rem;color:#555">${r['contact number']||r['contact']||''}</div>
+      </div>
       <button onclick="viewTeacher('${item.id}')">View</button>
       <button onclick="viewSchedule('${item.id}')">View Schedule</button>
+      <button onclick="triggerUpload('${item.id}')">Upload Photo</button>
+      <input type="file" accept="image/*" style="display:none" id="file_${item.id}">
     `;
-    container.appendChild(div);
+    container.appendChild(card);
+    document.getElementById(`file_${item.id}`).onchange=(e)=>previewPhoto(e,item.id);
   });
 }
 
-/* View Teacher Info */
-function viewTeacher(id){
-  const t=teacherData.find(x=>x.id===id); if(!t) return;
+/* Photo Upload */
+function triggerUpload(empId){ document.getElementById(`file_${empId}`).click(); }
+function previewPhoto(evt,empId){
+  const file=evt.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const dataUrl=e.target.result;
+    document.getElementById(`photo_${empId}`).src=dataUrl;
+    savedPhotos[empId]=dataUrl;
+    localStorage.setItem('teacherPhotos',JSON.stringify(savedPhotos));
+  };
+  reader.readAsDataURL(file);
+}
+
+/* Teacher Modal */
+function viewTeacher(empId){
+  const t=teacherData.find(x=>x.id===empId);
+  if(!t)return;
   const r=t.row;
-  document.getElementById('vFullName').textContent=`${r['First Name']||''} ${(r['Middle Name']||'').charAt(0)}. ${r['Last Name']||''}`;
-  document.getElementById('vPosition').textContent=r['Position']||'';
-  document.getElementById('vEmpNo').textContent=id;
-  document.getElementById('vSex').textContent=r['Sex']||'';
-  document.getElementById('vAge').textContent=r['Age']||'';
-  document.getElementById('vAddress').textContent=r['Address']||'';
-  document.getElementById('vSpec').textContent=r['Specialization']||'';
-  document.getElementById('vEmail').textContent=r['Email']||'';
-  document.getElementById('vContact').textContent=r['Contact']||'';
+  const middleInitial=r['middle name']?r['middle name'].charAt(0)+'.':'';
+  document.getElementById('vFullName').textContent=`${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
+  document.getElementById('vPosition').textContent=r['position']||'';
+  document.getElementById('vEmpNo').textContent=t.empNo||'';
+  document.getElementById('vSex').textContent=r['sex']||'';
+  document.getElementById('vAge').textContent=r['age']||'';
+  document.getElementById('vAddress').textContent=r['address']||'';
+  document.getElementById('vSpec').textContent=r['specialization']||'';
+  document.getElementById('vEmail').textContent=r['email']||'';
+  document.getElementById('vContact').textContent=r['contact number']||r['contact']||'';
   document.getElementById('viewModal').style.display='block';
 }
 function closeModal(){ document.getElementById('viewModal').style.display='none'; }
 
-/* Schedule View */
-function viewSchedule(id){
-  currentTeacherId=id;
-  const t=teacherData.find(x=>x.id===id); if(!t) return;
-  document.getElementById('scheduleTeacherName').textContent=`${t.row['First Name']} ${t.row['Last Name']}`;
-  renderScheduleTable(t.schedule||[]);
+/* Schedule Modal */
+function viewSchedule(empId){
+  currentTeacherId=empId;
+  const t=teacherData.find(x=>x.id===empId);
+  if(!t)return;
+  document.getElementById('scheduleTeacherName').textContent=
+    `${t.row['first name']||''} ${t.row['middle name']?t.row['middle name'].charAt(0)+'.':''} ${t.row['last name']||''}`;
+  renderScheduleTable(t.schedule);
   document.getElementById('scheduleModal').style.display='block';
 }
 function closeScheduleModal(){ document.getElementById('scheduleModal').style.display='none'; }
 
-/* Schedule CRUD */
-function renderScheduleTable(list){
+/* Add Manual Schedule */
+function addManualSchedule(){
+  if(!currentTeacherId)return;
+  const t=teacherData.find(x=>x.id===currentTeacherId);
+  const newEntry={
+    DAY:document.getElementById('dayInput').value.trim(),
+    SUBJECT:document.getElementById('subjectInput').value.trim(),
+    'START TIME':document.getElementById('startInput').value,
+    'END TIME':document.getElementById('endInput').value,
+    'GRADE LEVEL & SECTION':document.getElementById('gradeInput').value.trim(),
+    ROOM:document.getElementById('roomInput').value.trim()
+  };
+  if(!newEntry.DAY||!newEntry.SUBJECT) return alert("Please fill at least Day and Subject.");
+  t.schedule.push(newEntry);
+  saveSchedule(t.id,t.schedule);
+  renderScheduleTable(t.schedule);
+  document.querySelectorAll('.add-sched-form input').forEach(i=>i.value='');
+}
+
+/* Save to localStorage */
+function saveSchedule(id,sched){
+  savedSchedules[id]=sched;
+  localStorage.setItem('teacherSchedules',JSON.stringify(savedSchedules));
+}
+
+/* Edit / Delete */
+function editSchedule(index){
+  const t=teacherData.find(x=>x.id===currentTeacherId);
+  const sched=t.schedule[index];
+  const newDay=prompt("Edit Day:",sched.DAY);
+  const newSub=prompt("Edit Subject:",sched.SUBJECT);
+  const newStart=prompt("Edit Start Time:",sched["START TIME"]);
+  const newEnd=prompt("Edit End Time:",sched["END TIME"]);
+  const newGrade=prompt("Edit Grade & Section:",sched["GRADE LEVEL & SECTION"]);
+  const newRoom=prompt("Edit Room:",sched.ROOM);
+  if(newDay!==null) sched.DAY=newDay;
+  if(newSub!==null) sched.SUBJECT=newSub;
+  if(newStart!==null) sched["START TIME"]=newStart;
+  if(newEnd!==null) sched["END TIME"]=newEnd;
+  if(newGrade!==null) sched["GRADE LEVEL & SECTION"]=newGrade;
+  if(newRoom!==null) sched.ROOM=newRoom;
+  saveSchedule(currentTeacherId,t.schedule);
+  renderScheduleTable(t.schedule);
+}
+
+function deleteSchedule(index){
+  if(!confirm("Delete this schedule entry?"))return;
+  const t=teacherData.find(x=>x.id===currentTeacherId);
+  t.schedule.splice(index,1);
+  saveSchedule(t.id,t.schedule);
+  renderScheduleTable(t.schedule);
+}
+
+/* Render Table */
+function renderScheduleTable(rows){
   const tbody=document.querySelector('#scheduleTable tbody');
   tbody.innerHTML='';
-  list.forEach((s,i)=>{
+  rows.forEach((r,i)=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td>${s.day}</td>
-      <td>${s.subject}</td>
-      <td>${s.startTime}</td>
-      <td>${s.endTime}</td>
-      <td>${s.section}</td>
-      <td>${s.room}</td>
+      <td>${r['DAY']||''}</td>
+      <td>${r['SUBJECT']||''}</td>
+      <td>${r['START TIME']||''}</td>
+      <td>${r['END TIME']||''}</td>
+      <td>${r['GRADE LEVEL & SECTION']||''}</td>
+      <td>${r['ROOM']||''}</td>
       <td>
         <button onclick="editSchedule(${i})">Edit</button>
         <button onclick="deleteSchedule(${i})">Delete</button>
-      </td>`;
+      </td>
+    `;
     tbody.appendChild(tr);
   });
 }
 
-/* Add / Edit */
-function openAddScheduleForm(){
-  document.getElementById('editingIndex').value='';
-  document.getElementById('scheduleForm').reset();
-  document.getElementById('addScheduleModal').style.display='block';
-}
-function closeAddScheduleForm(){ document.getElementById('addScheduleModal').style.display='none'; }
-
-function saveSchedule(e){
-  e.preventDefault();
-  const id=currentTeacherId;
-  const t=teacherData.find(x=>x.id===id); if(!t) return;
-
-  const schedule={ 
-    day:day.value, subject:subject.value, 
-    startTime:startTime.value, endTime:endTime.value, 
-    section:section.value, room:room.value 
-  };
-
-  const idx=document.getElementById('editingIndex').value;
-  if(idx==='') t.schedule.push(schedule);
-  else t.schedule[idx]=schedule;
-
-  savedSchedules[id]=t.schedule;
-  localStorage.setItem('teacherSchedules',JSON.stringify(savedSchedules));
-  renderScheduleTable(t.schedule);
-  closeAddScheduleForm();
-}
-
-function editSchedule(i){
-  const t=teacherData.find(x=>x.id===currentTeacherId);
-  const s=t.schedule[i];
-  document.getElementById('editingIndex').value=i;
-  document.getElementById('day').value=s.day;
-  document.getElementById('subject').value=s.subject;
-  document.getElementById('startTime').value=s.startTime;
-  document.getElementById('endTime').value=s.endTime;
-  document.getElementById('section').value=s.section;
-  document.getElementById('room').value=s.room;
-  document.getElementById('addScheduleModal').style.display='block';
-}
-
-function deleteSchedule(i){
-  if(!confirm('Delete this schedule?')) return;
-  const t=teacherData.find(x=>x.id===currentTeacherId);
-  t.schedule.splice(i,1);
-  savedSchedules[currentTeacherId]=t.schedule;
-  localStorage.setItem('teacherSchedules',JSON.stringify(savedSchedules));
-  renderScheduleTable(t.schedule);
-}
-
 /* Search */
 function searchTeacher(){
-  const q=document.getElementById('searchInput').value.toLowerCase();
-  const filtered=teacherData.filter(t=>Object.values(t.row).join(' ').toLowerCase().includes(q));
+  const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+  const filtered=!q?teacherData:teacherData.filter(t=>Object.values(t.row).join(' ').toLowerCase().includes(q));
   renderCards(filtered);
 }
 
