@@ -4,169 +4,318 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Pagudpud Integrated School - Faculty Dashboard</title>
-
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-  :root {
-    --blue: #0d3b66;
-    --light-blue: #fafafa;
-    --shadow: rgba(0,0,0,0.1);
-  }
-
-  body {
-    font-family: "Poppins", sans-serif;
-    margin: 0;
-    background-color: var(--light-blue);
-    color: #333;
-  }
-
-  header {
-    text-align: center;
-    background-color: var(--blue);
-    color: white;
-    padding: 20px;
-  }
-
-  header h1 {
-    margin: 0;
-    font-size: 1.8rem;
-  }
-
-  header h2 {
-    margin: 5px 0 0 0;
-    font-weight: normal;
-    font-size: 1.2rem;
-  }
-
-  header h3 {
-    margin: 5px 0 0 0;
-    font-weight: normal;
-    font-size: 1rem;
-  }
-
-  .dashboard {
-    padding: 20px;
-  }
-
-  .teacher-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
-  }
-
-  .teacher-card {
-    background-color: #fff;
-    box-shadow: 0 2px 8px var(--shadow);
-    border-radius: 12px;
-    padding: 15px;
-    text-align: center;
-    transition: 0.3s;
-  }
-
-  .teacher-card:hover {
-    transform: scale(1.03);
-  }
-
-  .teacher-card img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 10px;
-  }
-
-  .teacher-card h3 {
-    margin: 0;
-    color: var(--blue);
-    font-size: 1.2rem;
-  }
-
-  .teacher-card p {
-    margin: 4px 0 10px;
-    font-size: 0.9rem;
-    color: #666;
-  }
-
-  button {
-    background-color: var(--blue);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 12px;
-    margin: 5px;
-    cursor: pointer;
-    transition: 0.3s;
-  }
-
-  button:hover {
-    background-color: #145b99;
-  }
-
-  /* Responsive */
-  @media (max-width: 600px) {
-    header h1 { font-size: 1.4rem; }
-    header h2 { font-size: 1rem; }
-  }
-
+:root { --blue:#0d3b66; --gold:#ffb703; --bg:#fff8e7; }
+body { font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; margin:0; background:var(--bg); }
+header { background:var(--blue); color:#fff; padding:15px 20px; text-align:center; font-size:1.4rem; position:relative; }
+#clock { position:absolute; top:8px; left:15px; font-size:0.9rem; }
+main { padding:20px; }
+.search-bar { margin-bottom:20px; text-align:center; }
+input[type="text"], select { padding:10px; width:320px; border-radius:8px; border:1px solid #ccc; }
+.teacher-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:15px; }
+.teacher-card { background:#fff; border-radius:12px; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; }
+.teacher-photo { width:100px; height:100px; object-fit:cover; border-radius:50%; border:3px solid var(--gold); margin-bottom:10px; }
+.teacher-name { font-weight:bold; color:var(--blue); font-size:1.05rem; }
+.teacher-info { font-size:0.9rem; color:#333; margin-top:6px; }
+button { background:var(--blue); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; margin:3px; }
+button:hover { background:var(--gold); color:var(--blue); }
+.modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:20; overflow:auto; }
+.modal-content { background:#fff; margin:4% auto; padding:20px; width:650px; border-radius:10px; }
+.close { float:right; color:red; cursor:pointer; font-size:1.2rem; }
+table { border-collapse:collapse; width:100%; }
+th, td { padding:6px 8px; text-align:left; border:1px solid #ccc; font-size:0.9rem; }
+th { background:var(--blue); color:#fff; }
+.add-sched-form { margin-top:15px; display:grid; grid-template-columns:repeat(6, 1fr) auto; gap:6px; align-items:center; }
+.add-sched-form input, .add-sched-form select { padding:6px; border-radius:4px; border:1px solid #ccc; font-size:0.85rem; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>PAGUDPUD INTEGRATED SCHOOL</h1>
-  <h2>City of San Fernando, La Union</h2>
-  <h3>FACULTY MANAGEMENT SYSTEM</h3>
+  <div id="clock"></div>
+  PAGUDPUD INTEGRATED SCHOOL — FACULTY DASHBOARD
 </header>
 
-<div class="dashboard">
-  <div id="teacherList" class="teacher-grid"></div>
+<main>
+  <div class="search-bar">
+    <input id="searchInput" type="text" placeholder="Search teacher..." oninput="searchTeacher()">
+  </div>
+  <div id="teacherContainer" class="teacher-grid"></div>
+</main>
+
+<!-- View Teacher Modal -->
+<div id="viewModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h3>Teacher Information</h3>
+    <p><strong>Full Name:</strong> <span id="vFullName"></span></p>
+    <p><strong>Position:</strong> <span id="vPosition"></span></p>
+    <p><strong>Employee No.:</strong> <span id="vEmpNo"></span></p>
+    <p><strong>Sex:</strong> <span id="vSex"></span></p>
+    <p><strong>Age:</strong> <span id="vAge"></span></p>
+    <p><strong>Address:</strong> <span id="vAddress"></span></p>
+    <p><strong>Specialization:</strong> <span id="vSpec"></span></p>
+    <p><strong>Email:</strong> <span id="vEmail"></span></p>
+    <p><strong>Contact No.:</strong> <span id="vContact"></span></p>
+  </div>
+</div>
+
+<!-- View Schedule Modal -->
+<div id="scheduleModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeScheduleModal()">&times;</span>
+    <h3>Schedule for <span id="scheduleTeacherName"></span></h3>
+    <table id="scheduleTable">
+      <thead>
+        <tr>
+          <th>DAY</th>
+          <th>SUBJECT</th>
+          <th>START TIME</th>
+          <th>END TIME</th>
+          <th>GRADE LEVEL & SECTION</th>
+          <th>ROOM</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <!-- ADD Schedule Inputs -->
+    <div class="add-sched-form">
+      <select id="dayInput">
+        <option value="">Select Day</option>
+        <option>Monday</option>
+        <option>Tuesday</option>
+        <option>Wednesday</option>
+        <option>Thursday</option>
+        <option>Friday</option>
+      </select>
+      <input id="subjectInput" placeholder="Subject">
+      <input id="startInput" type="time">
+      <input id="endInput" type="time">
+      <input id="gradeInput" placeholder="Grade & Section">
+      <input id="roomInput" placeholder="Room">
+      <button onclick="addManualSchedule()">Add Schedule</button>
+    </div>
+  </div>
 </div>
 
 <script>
-  // Sample data if localStorage is empty
-  const sampleTeachers = [
-    { name: "Sir Angelo Cruz", subject: "Math", photo: "https://via.placeholder.com/100" },
-    { name: "Ma'am Beatrice Santos", subject: "English", photo: "https://via.placeholder.com/100" },
-    { name: "Sir Carlos Rivera", subject: "Science", photo: "https://via.placeholder.com/100" },
-    { name: "Ma'am Diana Flores", subject: "Filipino", photo: "https://via.placeholder.com/100" }
-  ];
+/* Clock */
+function updateClock(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString(); }
+setInterval(updateClock,1000); updateClock();
 
-  if (!localStorage.getItem("teachers")) {
-    localStorage.setItem("teachers", JSON.stringify(sampleTeachers));
-  }
+/* Utilities */
+function normalizeHeader(h){ return String(h||'').trim().toLowerCase(); }
+function sanitizeKey(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,'_'); }
+function genIdFromName(first,last,middle){ 
+  const f=(first||'').trim().toLowerCase();
+  const l=(last||'').trim().toLowerCase();
+  const m=(middle||'').trim().toLowerCase().charAt(0)||'';
+  return sanitizeKey(`${f}_${m}_${l}`)||('id_'+Math.random().toString(36).slice(2,9));
+}
 
-  // Load teachers from localStorage and display them alphabetically
-  function loadTeachers() {
-    let teachers = JSON.parse(localStorage.getItem("teachers")) || [];
+/* Storage */
+let savedPhotos={}, savedSchedules={};
+try{ savedPhotos=JSON.parse(localStorage.getItem('teacherPhotos')||'{}'); }catch(e){}
+try{ savedSchedules=JSON.parse(localStorage.getItem('teacherSchedules')||'{}'); }catch(e){}
 
-    // ✅ SORT TEACHERS ALPHABETICALLY BY NAME
-    teachers.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+let teacherData=[];
+let currentTeacherId=null;
 
-    const teacherList = document.getElementById("teacherList");
-    teacherList.innerHTML = "";
+/* Load Teacher CSV */
+async function loadTeacherData(){
+  const fileUrl="https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/export?format=csv";
+  try{
+    const res=await fetch(fileUrl);
+    if(!res.ok) throw new Error('Fetch failed');
+    const csv=await res.text();
+    const wb=XLSX.read(csv,{type:'string'});
+    const sheet=wb.Sheets[wb.SheetNames[0]];
+    let raw=XLSX.utils.sheet_to_json(sheet,{defval:''});
 
-    teachers.forEach((teacher, index) => {
-      const card = document.createElement("div");
-      card.className = "teacher-card";
-      card.innerHTML = `
-        <img src="${teacher.photo || 'default.jpg'}" alt="Teacher Photo">
-        <h3>${teacher.name}</h3>
-        <p>${teacher.subject}</p>
-        <button onclick="viewSchedule(${index})">View Schedule</button>
-        <button onclick="addSchedule(${index})">Add Schedule</button>
-      `;
-      teacherList.appendChild(card);
+    teacherData=raw.map(row=>{
+      const normRow={};
+      for(const k in row) normRow[normalizeHeader(k)]=row[k];
+      const empNo=(normRow['employee number']||normRow['emp no']||normRow['employee_no']||'').toString().trim();
+      const id=empNo?sanitizeKey(empNo):genIdFromName(normRow['first name'],normRow['last name'],normRow['middle name']);
+      const photo=savedPhotos[id]||'';
+      const schedule=savedSchedules[id]||[];
+      return {id,empNo,row:normRow,photo,schedule};
     });
-  }
+    renderCards(teacherData);
+  }catch(err){console.error(err); alert('Failed to load teacher data.');}
+}
 
-  function viewSchedule(index) {
-    alert("Viewing schedule for " + JSON.parse(localStorage.getItem("teachers"))[index].name);
-  }
+/* Render Cards */
+function renderCards(list){
+  const container=document.getElementById('teacherContainer');
+  container.innerHTML='';
+  list.forEach(item=>{
+    const r=item.row;
+    const middleInitial=r['middle name']?r['middle name'].charAt(0).toUpperCase()+'.':'';
+    const fullName=`${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
+    const photoSrc=item.photo||'https://via.placeholder.com/100?text=No+Photo';
+    const card=document.createElement('div');
+    card.className='teacher-card';
+    card.innerHTML=`
+      <img src="${photoSrc}" class="teacher-photo" id="photo_${item.id}">
+      <div class="teacher-name">${fullName}</div>
+      <div class="teacher-info">
+        <div>${r['position']||''}</div>
+        <div style="font-size:0.85rem;color:#555">${r['email']||''}</div>
+        <div style="font-size:0.85rem;color:#555">${r['contact number']||r['contact']||''}</div>
+      </div>
+      <button onclick="viewTeacher('${item.id}')">View</button>
+      <button onclick="viewSchedule('${item.id}')">View Schedule</button>
+      <button onclick="triggerUpload('${item.id}')">Upload Photo</button>
+      <input type="file" accept="image/*" style="display:none" id="file_${item.id}">
+    `;
+    container.appendChild(card);
+    document.getElementById(`file_${item.id}`).onchange=(e)=>previewPhoto(e,item.id);
+  });
+}
 
-  function addSchedule(index) {
-    alert("Adding schedule for " + JSON.parse(localStorage.getItem("teachers"))[index].name);
-  }
+/* Photo Upload */
+function triggerUpload(empId){ document.getElementById(`file_${empId}`).click(); }
+function previewPhoto(evt,empId){
+  const file=evt.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const dataUrl=e.target.result;
+    document.getElementById(`photo_${empId}`).src=dataUrl;
+    savedPhotos[empId]=dataUrl;
+    localStorage.setItem('teacherPhotos',JSON.stringify(savedPhotos));
+  };
+  reader.readAsDataURL(file);
+}
 
-  document.addEventListener("DOMContentLoaded", loadTeachers);
+/* Teacher Modal */
+function viewTeacher(empId){
+  const t=teacherData.find(x=>x.id===empId);
+  if(!t)return;
+  const r=t.row;
+  const middleInitial=r['middle name']?r['middle name'].charAt(0)+'.':'';
+  document.getElementById('vFullName').textContent=`${r['first name']||''} ${middleInitial} ${r['last name']||''}`.trim();
+  document.getElementById('vPosition').textContent=r['position']||'';
+  document.getElementById('vEmpNo').textContent=t.empNo||'';
+  document.getElementById('vSex').textContent=r['sex']||'';
+  document.getElementById('vAge').textContent=r['age']||'';
+  document.getElementById('vAddress').textContent=r['address']||'';
+  document.getElementById('vSpec').textContent=r['specialization']||'';
+  document.getElementById('vEmail').textContent=r['email']||'';
+  document.getElementById('vContact').textContent=r['contact number']||r['contact']||'';
+  document.getElementById('viewModal').style.display='block';
+}
+function closeModal(){ document.getElementById('viewModal').style.display='none'; }
+
+/* Schedule Modal */
+function viewSchedule(empId){
+  currentTeacherId=empId;
+  const t=teacherData.find(x=>x.id===empId);
+  if(!t)return;
+  document.getElementById('scheduleTeacherName').textContent=
+    `${t.row['first name']||''} ${t.row['middle name']?t.row['middle name'].charAt(0)+'.':''} ${t.row['last name']||''}`;
+  renderScheduleTable(t.schedule);
+  document.getElementById('scheduleModal').style.display='block';
+}
+function closeScheduleModal(){ document.getElementById('scheduleModal').style.display='none'; }
+
+/* Format Time to 12-hour */
+function formatTo12Hour(timeStr){
+  if(!timeStr) return '';
+  const [hour, minute]=timeStr.split(':');
+  let h=parseInt(hour,10);
+  const suffix=h>=12?'PM':'AM';
+  h=h%12||12;
+  return `${h}:${minute} ${suffix}`;
+}
+
+/* Add Manual Schedule */
+function addManualSchedule(){
+  if(!currentTeacherId)return;
+  const t=teacherData.find(x=>x.id===currentTeacherId);
+  const newEntry={
+    DAY:document.getElementById('dayInput').value.trim(),
+    SUBJECT:document.getElementById('subjectInput').value.trim(),
+    'START TIME':formatTo12Hour(document.getElementById('startInput').value),
+    'END TIME':formatTo12Hour(document.getElementById('endInput').value),
+    'GRADE LEVEL & SECTION':document.getElementById('gradeInput').value.trim(),
+    ROOM:document.getElementById('roomInput').value.trim()
+  };
+  if(!newEntry.DAY||!newEntry.SUBJECT) return alert("Please fill at least Day and Subject.");
+  t.schedule.push(newEntry);
+  saveSchedule(t.id,t.schedule);
+  renderScheduleTable(t.schedule);
+  document.querySelectorAll('.add-sched-form input, .add-sched-form select').forEach(i=>i.value='');
+}
+
+/* Save to localStorage */
+function saveSchedule(id,sched){
+  savedSchedules[id]=sched;
+  localStorage.setItem('teacherSchedules',JSON.stringify(savedSchedules));
+}
+
+/* Edit / Delete */
+function editSchedule(index){
+  const t=teacherData.find(x=>x.id===currentTeacherId);
+  const sched=t.schedule[index];
+  const newDay=prompt("Edit Day:",sched.DAY);
+  const newSub=prompt("Edit Subject:",sched.SUBJECT);
+  const newStart=prompt("Edit Start Time:",sched["START TIME"]);
+  const newEnd=prompt("Edit End Time:",sched["END TIME"]);
+  const newGrade=prompt("Edit Grade & Section:",sched["GRADE LEVEL & SECTION"]);
+  const newRoom=prompt("Edit Room:",sched.ROOM);
+  if(newDay!==null) sched.DAY=newDay;
+  if(newSub!==null) sched.SUBJECT=newSub;
+  if(newStart!==null) sched["START TIME"]=newStart;
+  if(newEnd!==null) sched["END TIME"]=newEnd;
+  if(newGrade!==null) sched["GRADE LEVEL & SECTION"]=newGrade;
+  if(newRoom!==null) sched.ROOM=newRoom;
+  saveSchedule(currentTeacherId,t.schedule);
+  renderScheduleTable(t.schedule);
+}
+
+function deleteSchedule(index){
+  if(!confirm("Delete this schedule entry?"))return;
+  const t=teacherData.find(x=>x.id===currentTeacherId);
+  t.schedule.splice(index,1);
+  saveSchedule(t.id,t.schedule);
+  renderScheduleTable(t.schedule);
+}
+
+/* Render Table */
+function renderScheduleTable(rows){
+  const tbody=document.querySelector('#scheduleTable tbody');
+  tbody.innerHTML='';
+  rows.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${r['DAY']||''}</td>
+      <td>${r['SUBJECT']||''}</td>
+      <td>${r['START TIME']||''}</td>
+      <td>${r['END TIME']||''}</td>
+      <td>${r['GRADE LEVEL & SECTION']||''}</td>
+      <td>${r['ROOM']||''}</td>
+      <td>
+        <button onclick="editSchedule(${i})">Edit</button>
+        <button onclick="deleteSchedule(${i})">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* Search */
+function searchTeacher(){
+  const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+  const filtered=!q?teacherData:teacherData.filter(t=>Object.values(t.row).join(' ').toLowerCase().includes(q));
+  renderCards(filtered);
+}
+
+/* Init */
+loadTeacherData();
 </script>
 
 </body>
