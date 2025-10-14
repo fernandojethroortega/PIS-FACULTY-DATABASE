@@ -192,6 +192,28 @@ function previewPhoto(evt,empId){
   reader.readAsDataURL(file);
 }
 
+/* Parse time robustly to minutes */
+function parseTimeToMinutes(timeStr) {
+  if(!timeStr) return NaN;
+  timeStr = timeStr.toString().trim().toUpperCase();
+  let h=0,m=0;
+  if(timeStr.includes('AM') || timeStr.includes('PM')) {
+    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if(!match) return NaN;
+    h = parseInt(match[1]);
+    m = parseInt(match[2]);
+    const period = match[3];
+    if(period==='PM' && h!==12) h+=12;
+    if(period==='AM' && h===12) h=0;
+  } else {
+    const parts = timeStr.split(':');
+    if(parts.length!==2) return NaN;
+    h = parseInt(parts[0]);
+    m = parseInt(parts[1]);
+  }
+  return h*60 + m;
+}
+
 /* Teacher info modal */
 function viewTeacher(empId){
   const t=teacherData.find(x=>x.id===empId);
@@ -286,16 +308,10 @@ function checkVacantTeachers() {
     if (!t.schedule || t.schedule.length === 0) return true;
     return !t.schedule.some(r => {
       const rDay = r['DAY'] || r['Day'] || '';
-      const startTime = r['START TIME'] || r['Start Time'] || '';
-      const endTime = r['END TIME'] || r['End Time'] || '';
-
-      if (rDay.toLowerCase() !== dayName.toLowerCase()) return false;
-      const [sH,sM] = startTime.split(':').map(Number);
-      const [eH,eM] = endTime.split(':').map(Number);
-      if (isNaN(sH)||isNaN(eH)) return false;
-
-      const startMinutes = sH*60 + sM;
-      const endMinutes = eH*60 + eM;
+      const startMinutes = parseTimeToMinutes(r['START TIME']||r['Start Time']);
+      const endMinutes = parseTimeToMinutes(r['END TIME']||r['End Time']);
+      if(isNaN(startMinutes)||isNaN(endMinutes)) return false;
+      if(rDay.toLowerCase() !== dayName.toLowerCase()) return false;
       return selectedMinutes >= startMinutes && selectedMinutes < endMinutes;
     });
   });
@@ -314,16 +330,10 @@ function checkVacantNow() {
     if (!t.schedule || t.schedule.length === 0) return true;
     return !t.schedule.some(r => {
       const rDay = r['DAY'] || r['Day'] || '';
-      const startTime = r['START TIME'] || r['Start Time'] || '';
-      const endTime = r['END TIME'] || r['End Time'] || '';
-
-      if (rDay.toLowerCase() !== dayName.toLowerCase()) return false;
-      const [sH,sM] = startTime.split(':').map(Number);
-      const [eH,eM] = endTime.split(':').map(Number);
-      if (isNaN(sH)||isNaN(eH)) return false;
-
-      const startMinutes = sH*60 + sM;
-      const endMinutes = eH*60 + eM;
+      const startMinutes = parseTimeToMinutes(r['START TIME']||r['Start Time']);
+      const endMinutes = parseTimeToMinutes(r['END TIME']||r['End Time']);
+      if(isNaN(startMinutes)||isNaN(endMinutes)) return false;
+      if(rDay.toLowerCase() !== dayName.toLowerCase()) return false;
       return selectedMinutes >= startMinutes && selectedMinutes < endMinutes;
     });
   });
