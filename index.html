@@ -168,7 +168,6 @@ function renderCards(list,containerId='teacherContainer'){
       <input type="file" accept=".csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" id="scheduleFile_${item.id}">
     `;
     container.appendChild(card);
-
     document.getElementById(`file_${item.id}`).onchange=(e)=>previewPhoto(e,item.id);
     document.getElementById(`scheduleFile_${item.id}`).onchange=(e)=>handleScheduleUpload(e,item.id);
   });
@@ -192,7 +191,27 @@ function previewPhoto(evt,empId){
   reader.readAsDataURL(file);
 }
 
-/* Schedule modal */
+/* Time parsing */
+function parseTimeToMinutes(timeStr){
+  if(!timeStr) return NaN;
+  timeStr = timeStr.toString().trim().toUpperCase();
+  let h=0, m=0;
+  if(timeStr.includes('AM') || timeStr.includes('PM')){
+    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if(!match) return NaN;
+    h=parseInt(match[1]); m=parseInt(match[2]);
+    const period = match[3];
+    if(period==='PM' && h!==12) h+=12;
+    if(period==='AM' && h===12) h=0;
+  } else {
+    const parts=timeStr.split(':');
+    if(parts.length!==2) return NaN;
+    h=parseInt(parts[0]); m=parseInt(parts[1]);
+  }
+  return h*60+m;
+}
+
+/* Handle Schedule Import */
 function triggerScheduleUpload(empId){ document.getElementById(`scheduleFile_${empId}`).click(); }
 function handleScheduleUpload(evt,empId){
   const file=evt.target.files[0]; if(!file) return;
@@ -204,19 +223,29 @@ function handleScheduleUpload(evt,empId){
       if(file.name.endsWith('.csv')) wb=XLSX.read(data,{type:'binary'});
       else wb=XLSX.read(data,{type:'array'});
     }catch(err){ alert('Failed to read file: '+err.message); return; }
+
     const sheet=wb.Sheets[wb.SheetNames[0]];
     const scheduleRows=XLSX.utils.sheet_to_json(sheet,{defval:''});
-    const t=teacherData.find(x=>x.id===empId);
-    if(t) t.schedule=scheduleRows;
-    savedSchedules[empId]=scheduleRows;
-    try{ localStorage.setItem('teacherSchedules',JSON.stringify(savedSchedules)); } catch(err){ console.error(err); }
+    const normalized = scheduleRows.map(r=>{
+      const day = (r['DAY']||r['Day']||'').toLowerCase();
+      const start = parseTimeToMinutes(r['START TIME']||r['Start Time']);
+      const end = parseTimeToMinutes(r['END TIME']||r['End Time']);
+      return {...r, day, start, end};
+    });
+
+    const t = teacherData.find(x=>x.id===empId);
+    if(t){
+      t.schedule = normalized;
+      savedSchedules[empId]=normalized;
+      try{ localStorage.setItem('teacherSchedules',JSON.stringify(savedSchedules)); } catch(err){ console.error(err); }
+    }
     alert('Schedule imported successfully. Click "View Schedule" to see it.');
   };
   if(file.name.endsWith('.csv')) reader.readAsBinaryString(file);
   else reader.readAsArrayBuffer(file);
 }
 
-/* Teacher info modal */
+/* View Teacher */
 function viewTeacher(empId){
   const t=teacherData.find(x=>x.id===empId);
   if(!t) return alert('Teacher not found');
@@ -235,7 +264,7 @@ function viewTeacher(empId){
 }
 function closeModal(){ document.getElementById('viewModal').style.display='none'; }
 
-/* Schedule modal */
+/* View Schedule */
 function viewSchedule(empId){
   const t=teacherData.find(x=>x.id===empId);
   if(!t) return alert('Teacher not found');
@@ -271,44 +300,20 @@ function searchTeacher(){
   renderCards(filtered);
 }
 
-/* Robust time parser */
-function parseTimeToMinutes(timeStr){
-  if(!timeStr) return NaN;
-  timeStr = timeStr.toString().trim().toUpperCase();
-  let h=0, m=0;
-  if(timeStr.includes('AM') || timeStr.includes('PM')){
-    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if(!match) return NaN;
-    h=parseInt(match[1]); m=parseInt(match[2]);
-    const period = match[3];
-    if(period==='PM' && h!==12) h+=12;
-    if(period==='AM' && h===12) h=0;
-  } else {
-    const parts=timeStr.split(':');
-    if(parts.length!==2) return NaN;
-    h=parseInt(parts[0]); m=parseInt(parts[1]);
-  }
-  return h*60+m;
-}
-
-/* Check Vacant Teachers by selected date/time */
-function checkVacantTeachers() {
+/* Check Vacant Teachers by date/time */
+function checkVacantTeachers(){
   const dateStr = document.getElementById('checkDate').value;
   const timeStr = document.getElementById('checkTime').value;
-  if (!dateStr || !timeStr) return alert('Please select both date and time.');
-  const dayName = new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-  const [selHour, selMin] = timeStr.split(':').map(Number);
-  const selectedMinutes = selHour*60 + selMin;
+  if(!dateStr || !timeStr) return alert('Please select both date and time.');
+  const dayName = new Date(dateStr).toLocaleDateString('en-US',{weekday:'long'}).toLowerCase();
+  const [selHour,selMin]=timeStr.split(':').map(Number);
+  const selectedMinutes = selHour*60+selMin;
 
   const vacant = teacherData.filter(t=>{
     if(!t.schedule || t.schedule.length===0) return true;
     return !t.schedule.some(r=>{
-      const rDay = (r['DAY']||r['Day']||'').toLowerCase();
-      if(rDay !== dayName) return false;
-      const start=parseTimeToMinutes(r['START TIME']||r['Start Time']);
-      const end=parseTimeToMinutes(r['END TIME']||r['End Time']);
-      if(isNaN(start)||isNaN(end)) return false;
-      return selectedMinutes>=start && selectedMinutes<end;
+      if(r.day!==dayName) return false;
+      return selectedMinutes>=r.start && selectedMinutes<r.end;
     });
   });
 
@@ -319,18 +324,14 @@ function checkVacantTeachers() {
 /* Check Vacant Now */
 function checkVacantNow(){
   const now = new Date();
-  const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+  const dayName = now.toLocaleDateString('en-US',{weekday:'long'}).toLowerCase();
   const currentMinutes = now.getHours()*60 + now.getMinutes();
 
   const vacant = teacherData.filter(t=>{
     if(!t.schedule || t.schedule.length===0) return true;
     return !t.schedule.some(r=>{
-      const rDay=(r['DAY']||r['Day']||'').toLowerCase();
-      if(rDay !== dayName) return false;
-      const start=parseTimeToMinutes(r['START TIME']||r['Start Time']);
-      const end=parseTimeToMinutes(r['END TIME']||r['End Time']);
-      if(isNaN(start)||isNaN(end)) return false;
-      return currentMinutes>=start && currentMinutes<end;
+      if(r.day!==dayName) return false;
+      return currentMinutes>=r.start && currentMinutes<r.end;
     });
   });
 
