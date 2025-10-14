@@ -120,8 +120,7 @@ async function loadTeacherData(){
       const empNo = (normRow['employee number']||normRow['emp no']||normRow['employee_no']||'').toString().trim();
       const id = empNo ? sanitizeKey(empNo) : genIdFromName(normRow['first name'], normRow['last name'], normRow['middle name']);
       const photo = savedPhotos[id] || savedPhotos[empNo] || savedPhotos[sanitizeKey(normRow['first name']+'_'+normRow['last name'])] || '';
-      const schedule = savedSchedules[id] || [];
-      return {id, empNo, row: normRow, photo: photo||'', schedule};
+      return {id, empNo, row: normRow, photo: photo||''};
     });
     renderCards(teacherData);
   } catch(err){ console.error(err); alert('Failed to load sheet. See console for details.'); }
@@ -150,13 +149,10 @@ function renderCards(list){
       <button onclick="viewSchedule('${item.id}')">View Schedule</button>
       <button onclick="triggerUpload('${item.id}')">Upload Photo</button>
       <input type="file" accept="image/*" style="display:none" id="file_${item.id}">
-      <button onclick="triggerScheduleUpload('${item.id}')">Import Schedule</button>
-      <input type="file" accept=".csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" id="scheduleFile_${item.id}">
     `;
     container.appendChild(card);
 
     document.getElementById(`file_${item.id}`).onchange=(e)=>previewPhoto(e,item.id);
-    document.getElementById(`scheduleFile_${item.id}`).onchange=(e)=>handleScheduleUpload(e,item.id);
   });
 }
 
@@ -198,38 +194,12 @@ function viewTeacher(empId){
 function closeModal(){ document.getElementById('viewModal').style.display='none'; }
 
 /* Schedule modal */
-function triggerScheduleUpload(empId){ document.getElementById(`scheduleFile_${empId}`).click(); }
-function handleScheduleUpload(evt,empId){
-  const file=evt.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    let data=e.target.result;
-    let wb;
-    try{
-      if(file.name.endsWith('.csv')) wb=XLSX.read(data,{type:'binary'});
-      else wb=XLSX.read(data,{type:'array'});
-    }catch(err){ alert('Failed to read file: '+err.message); return; }
-    const sheet=wb.Sheets[wb.SheetNames[0]];
-    const scheduleRows=XLSX.utils.sheet_to_json(sheet,{defval:''});
-    const t=teacherData.find(x=>x.id===empId);
-    if(t) {
-      t.schedule=scheduleRows;
-      savedSchedules[empId]=scheduleRows;
-      localStorage.setItem('teacherSchedules',JSON.stringify(savedSchedules));
-    }
-    alert('Schedule imported successfully. Click "View Schedule" to see it.');
-  };
-  if(file.name.endsWith('.csv')) reader.readAsBinaryString(file);
-  else reader.readAsArrayBuffer(file);
-}
-
 function viewSchedule(empId){
   const t=teacherData.find(x=>x.id===empId);
   if(!t) return alert('Teacher not found');
 
   const fullName=`${t.row['first name']||''} ${t.row['middle name']?t.row['middle name'].charAt(0)+'.':''} ${t.row['last name']||''}`.trim();
   const rows=t.schedule||[];
-  if(rows.length===0) return alert('No schedule imported yet. Please import your schedule file.');
 
   const tbody=document.querySelector('#scheduleTable tbody');
   tbody.innerHTML='';
