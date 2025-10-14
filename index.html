@@ -15,23 +15,53 @@
     margin: 0;
     background-color: var(--bg);
   }
+
+  /* ===== HEADER ===== */
   header {
     background-color: var(--blue);
     color: white;
-    padding: 15px 20px;
+    padding: 10px 10px 15px 10px;
     text-align: center;
-    font-size: 1.5rem;
     font-weight: bold;
-    position: relative;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 10;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
   }
   #clock {
     position: absolute;
-    top: 5px;
+    top: 8px;
     left: 15px;
     font-size: 0.9rem;
   }
+  .school-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  .school-header img {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 8px;
+  }
+  .school-header h1 {
+    font-size: 1.6rem;
+    margin: 0;
+    color: #ffcc00;
+  }
+  .school-header h2 {
+    font-size: 1rem;
+    margin: 3px 0 0 0;
+    font-weight: normal;
+    color: #fefefe;
+  }
+
+  /* ===== MAIN CONTENT ===== */
   main {
-    padding: 20px;
+    padding: 180px 20px 20px 20px; /* add padding to avoid overlap with fixed header */
   }
   .teacher-card {
     background: white;
@@ -84,7 +114,11 @@
 
 <header>
   <div id="clock"></div>
-  Pagudpud Integrated School - Faculty Dashboard
+  <div class="school-header">
+    <img src="PIS OFFICIAL SEAL.png" alt="School Logo">
+    <h1>PAGUDPUD INTEGRATED SCHOOL</h1>
+    <h2>City of San Fernando, La Union</h2>
+  </div>
 </header>
 
 <main>
@@ -92,7 +126,7 @@
 </main>
 
 <script>
-// Clock Display
+// ===== CLOCK DISPLAY =====
 function updateClock() {
   const now = new Date();
   document.getElementById('clock').textContent = now.toLocaleTimeString();
@@ -100,7 +134,7 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// Fetch from Google Sheets
+// ===== FETCH GOOGLE SHEET DATA =====
 const sheetURL = "https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/gviz/tq?tqx=out:json";
 
 async function fetchTeacherData() {
@@ -122,7 +156,7 @@ async function fetchTeacherData() {
       specialization: row.c[8]?.v || "",
       email: row.c[9]?.v || "",
       contact: row.c[10]?.v || "",
-      photo: localStorage.getItem(row.c[4]?.v || "") // Load stored photo
+      photo: localStorage.getItem(row.c[4]?.v || "")
     }));
 
     renderTeachers(teachers);
@@ -132,7 +166,7 @@ async function fetchTeacherData() {
   }
 }
 
-// Render Teachers
+// ===== DISPLAY TEACHER CARDS =====
 function renderTeachers(teachers) {
   const container = document.getElementById("teacherContainer");
   container.innerHTML = "";
@@ -164,7 +198,7 @@ function renderTeachers(teachers) {
   });
 }
 
-// Upload Photo Function
+// ===== UPLOAD PHOTO FUNCTION =====
 function uploadPhoto(event, empNumber) {
   const file = event.target.files[0];
   if (!file) return;
@@ -174,7 +208,7 @@ function uploadPhoto(event, empNumber) {
   }
   const reader = new FileReader();
   reader.onload = function(e) {
-    localStorage.setItem(empNumber, e.target.result); // Save image
+    localStorage.setItem(empNumber, e.target.result);
     document.getElementById(`photo-${empNumber}`).src = e.target.result;
   };
   reader.readAsDataURL(file);
