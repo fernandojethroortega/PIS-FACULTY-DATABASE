@@ -15,8 +15,7 @@
     input[type="text"], select { padding:10px; width:320px; border-radius:8px; border:1px solid #ccc; }
     .teacher-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:15px; }
     .teacher-card { background:#fff; border-radius:12px; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; }
-    .teacher-photo { width:100px; height:100px; object-fit:cover; border-radius:50%; border:3px solid var(--gold); margin-bottom:10px; }
-    .teacher-name { font-weight:bold; color:var(--blue); font-size:1.05rem; }
+    .teacher-name { font-weight:bold; color:var(--blue); font-size:1.05rem; margin-bottom:6px; }
     .teacher-info { font-size:0.9rem; color:#333; margin-top:6px; }
     button { background:var(--blue); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; margin:3px; }
     button:hover { background:var(--gold); color:var(--blue); }
@@ -113,9 +112,8 @@ function genIdFromName(first,last,middle){
   return sanitizeKey(`${f}_${m}_${l}`) || ('id_'+Math.random().toString(36).slice(2,9));
 }
 
-/* Storage for local fallback */
-let savedPhotos = {}, savedSchedules = {};
-try { savedPhotos = JSON.parse(localStorage.getItem('teacherPhotos') || '{}'); } catch(e){}
+/* Storage for schedules */
+let savedSchedules = {};
 try { savedSchedules = JSON.parse(localStorage.getItem('teacherSchedules') || '{}'); } catch(e){}
 
 let teacherData = [], currentTeacherId = null;
@@ -136,9 +134,8 @@ async function loadTeacherData(){
       for (const k in row) normRow[normalizeHeader(k)] = row[k];
       const empNo = (normRow['employee number'] || normRow['emp no'] || normRow['employee_no'] || '').toString().trim();
       const id = empNo ? sanitizeKey(empNo) : genIdFromName(normRow['first name'], normRow['last name'], normRow['middle name']);
-      const photo = savedPhotos[id] || '';
       const schedule = savedSchedules[id] || [];
-      return { id, empNo, row: normRow, photo, schedule };
+      return { id, empNo, row: normRow, schedule };
     });
     renderCards(teacherData);
   } catch (err) {
@@ -151,19 +148,18 @@ async function loadTeacherData(){
 function renderCards(list){
   const container = document.getElementById('teacherContainer');
   container.innerHTML = '';
+  if (list.length === 0) {
+    container.innerHTML = '<p style="text-align:center; color:#888;">No teacher found.</p>';
+    return;
+  }
   list.forEach(item => {
     const r = item.row;
     const middleInitial = r['middle name'] ? r['middle name'].charAt(0).toUpperCase()+'.' : '';
     const fullName = `${r['first name'] || ''} ${middleInitial} ${r['last name'] || ''}`.trim();
 
-    // Use Photo URL from sheet if present, otherwise fallback to local or placeholder
-    const photoUrlFromSheet = (r['photo url'] || '').trim();
-    const photoSrc = photoUrlFromSheet || item.photo || 'https://docs.google.com/spreadsheets/d/1FJl1WywegQhwYHdAv_nf4ZmNrEI63sJfdP_83lD8lfk/edit?gid=332455421#gid=332455421';
-
     const card = document.createElement('div');
     card.className = 'teacher-card';
     card.innerHTML = `
-      <img src="${photoSrc}" class="teacher-photo" id="photo_${item.id}">
       <div class="teacher-name">${fullName}</div>
       <div class="teacher-info">
         <div>${r['position'] || ''}</div>
@@ -172,29 +168,9 @@ function renderCards(list){
       </div>
       <button onclick="viewTeacher('${item.id}')">View</button>
       <button onclick="viewSchedule('${item.id}')">View Schedule</button>
-      <button onclick="triggerUpload('${item.id}')">Upload Photo</button>
-      <input type="file" accept="image/*" style="display:none" id="file_${item.id}">
     `;
     container.appendChild(card);
-    document.getElementById(`file_${item.id}`).onchange = (e) => previewPhoto(e, item.id);
   });
-}
-
-/* Photo upload fallback/local */
-function triggerUpload(empId) {
-  document.getElementById(`file_${empId}`).click();
-}
-function previewPhoto(evt, empId) {
-  const file = evt.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const dataUrl = e.target.result;
-    document.getElementById(`photo_${empId}`).src = dataUrl;
-    savedPhotos[empId] = dataUrl;
-    localStorage.setItem('teacherPhotos', JSON.stringify(savedPhotos));
-  };
-  reader.readAsDataURL(file);
 }
 
 /* View teacher info */
@@ -328,4 +304,3 @@ loadTeacherData();
 </script>
 </body>
 </html>
-
